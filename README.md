@@ -1,25 +1,40 @@
-# Printable Studio (lokalnie)
+# Printable Studio
 
-Lokalny generator tagow 3D dzialajacy offline, inspirowany serwisami do tworzenia identyfikatorow i zawieszek.
+Printable Studio to webowa aplikacja do tworzenia prostych modeli 3D (tagi, zawieszki) z eksportem do STL.
+
+## Live Demo
+
+Demo online: https://studio.mojestrony.pl
+
+## Screenshot
+
+![Printable Studio - screenshot](docs/app-screenshot.png)
 
 ## Funkcje
 
-- Podglad 3D tagu w czasie rzeczywistym (orbit, zoom, pan)
-- Parametry geometrii: ksztalt, rozmiar, grubosc, promien rogow
+- Podglad 3D modelu w czasie rzeczywistym (obrot, zoom, przesuniecie)
+- Konfiguracja geometrii: ksztalt, rozmiar, grubosc, promien rogow
 - Otwor na kolko z regulacja srednicy i marginesu
-- Napis 3D: tekst, rozmiar, glebokosc, tryb wypukly/wklesly
-- Eksport gotowego modelu do pliku STL
-- Presety zapisywane lokalnie (localStorage)
-- Pelne dzialanie lokalnie, bez zewnetrznego API
+- Napis 3D: tekst, rozmiar i glebokosc (wypukly lub wklesly)
+- Eksport modelu do pliku STL
+- Lokalne presety zapisywane w localStorage
+- Dzialanie po stronie klienta, bez zewnetrznego API
 
-## Uruchomienie
+## Tech Stack
+
+- TypeScript
+- Vite
+- Three.js
+- OpenJSCAD + STL serializer
+
+## Uruchomienie lokalne
 
 ```bash
 npm install
 npm run dev
 ```
 
-Aplikacja bedzie dostepna pod adresem podanym przez Vite (domyslnie `http://localhost:5173`).
+Domyslnie aplikacja jest dostepna pod adresem: http://localhost:5173
 
 ## Build produkcyjny
 
@@ -28,7 +43,12 @@ npm run build
 npm run preview
 ```
 
-## Uwagi
+## Struktura projektu
 
-- Font 3D jest dolaczony lokalnie w `public/fonts/helvetiker_regular.typeface.json`.
-- STL jest generowany po stronie klienta (w przegladarce).
+- src/ - kod aplikacji
+- public/fonts/ - lokalne fonty 3D (typeface.json)
+- scripts/ - skrypty pomocnicze
+
+## Licencja
+
+Brak okreslonej licencji.
