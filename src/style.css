@@ -6,6 +6,7 @@
   --line: #dbcdb9;
   --accent: #d46816;
   --accent-dark: #a14a10;
+  --panel-width: 380px;
 }
 
 * {
@@ -30,7 +31,7 @@ body {
 
 .layout {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: minmax(300px, var(--panel-width)) 10px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
 }
@@ -42,6 +43,26 @@ body {
   padding: 1.2rem 1.1rem 1.4rem;
   overflow-y: auto;
   min-height: 0;
+}
+
+.panel-resize-handle {
+  position: relative;
+  cursor: col-resize;
+  background: linear-gradient(180deg, rgba(219, 205, 185, 0.45) 0%, rgba(219, 205, 185, 0.7) 100%);
+  border-left: 1px solid rgba(219, 205, 185, 0.85);
+  border-right: 1px solid rgba(219, 205, 185, 0.85);
+}
+
+.panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 48px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  background: rgba(123, 111, 98, 0.55);
 }
 
 .panel h1 {
@@ -145,6 +166,92 @@ textarea {
   margin-top: 0.35rem;
 }
 
+#diceFacesPanel .grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+#diceFacesPanel .field {
+  min-width: 0;
+}
+
+#diceFacesPanel .face-option-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 46%);
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.35rem;
+}
+
+#diceFacesPanel .face-option-row.face-option-toggle {
+  grid-template-columns: 1fr;
+}
+
+#diceFacesPanel .face-option-row.face-option-toggle .field-inline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  gap: 0.5rem;
+}
+
+#diceFacesPanel .face-option-row.face-option-toggle .field-inline > span {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#diceFacesPanel .face-option-row.face-option-toggle input[type='checkbox'] {
+  width: auto;
+  min-width: auto;
+}
+
+#diceFacesPanel .face-option-row > label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+#diceFacesPanel .face-option-row > input[type='file'] {
+  padding: 0.38rem 0.5rem;
+}
+
+#diceFacesPanel .grid-2 > .field {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+
+#diceFacesPanel .grid-2 > .field > label {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.2rem;
+}
+
+#diceFacesPanel input,
+#diceFacesPanel select,
+#diceFacesPanel textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  #diceFacesPanel .face-option-row {
+    grid-template-columns: 1fr;
+    gap: 0.28rem;
+  }
+
+  #diceFacesPanel .face-option-row.face-option-toggle .field-inline {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
 button {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -178,9 +285,16 @@ button.primary:hover {
   padding: 0.85rem;
 }
 
-.preset-card h2 {
+.preset-card > summary {
+  cursor: pointer;
   margin: 0 0 0.6rem;
   font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.preset-card:not([open]) {
+  padding-bottom: 0.6rem;
 }
 
 .viewer-wrap {
@@ -229,6 +343,10 @@ button.primary:hover {
     border-bottom: 1px solid var(--line);
     min-height: auto;
     overflow-y: visible;
+  }
+
+  .panel-resize-handle {
+    display: none;
   }
 
   .viewer-wrap {
