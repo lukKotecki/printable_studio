@@ -3,9 +3,12 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+import { TTFLoader } from 'three/examples/jsm/loaders/TTFLoader.js'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { MeshBVH } from 'three-mesh-bvh'
 import { CSG } from 'three-csg-ts'
 
 type ModelType = 'tag' | 'dice'
@@ -246,14 +249,14 @@ app.innerHTML = `
           <option value="gentilis">Gentilis</option>
           <option value="droidSans">Droid Sans</option>
           <option value="droidSerif">Droid Serif</option>
-          <option value="custom">Wlasny font (typeface.json)</option>
+          <option value="custom">Wlasny font (.ttf lub typeface.json)</option>
         </select>
       </div>
 
       <div class="field" id="customFontWrap" style="display: none;">
         <label for="customFontFile">Wlasny plik fontu</label>
-        <input id="customFontFile" type="file" accept=".json,application/json" />
-        <small id="fontStatus">Wybierz plik typeface.json.</small>
+        <input id="customFontFile" type="file" accept=".ttf,.json,application/json,font/ttf" />
+        <small id="fontStatus">Wybierz plik .ttf lub typeface.json.</small>
       </div>
 
       <div id="tagControls">
@@ -412,7 +415,7 @@ app.innerHTML = `
           <div class="grid-2">
             <label class="field-inline">
               <input id="diceShowCube" type="checkbox" checked />
-              <span>Widoczny sześcian</span>
+              <span>Widoczny sze+�cian</span>
             </label>
             <label class="field-inline">
               <input id="diceShowText" type="checkbox" checked />
@@ -421,7 +424,7 @@ app.innerHTML = `
           </div>
           <label class="field-inline">
             <input id="diceShowSphere" type="checkbox" />
-            <span>Widoczna kula ograniczająca</span>
+            <span>Widoczna kula ograniczaj��ca</span>
           </label>
           <label class="field-inline">
             <input id="diceClipWithSphere" type="checkbox" />
@@ -743,6 +746,7 @@ app.innerHTML = `
         <button id="resetBtn" type="button">Reset</button>
         <button id="exportBtn" type="button" class="primary">Eksport STL</button>
       </div>
+      <small id="exportStatus">Eksport: gotowy</small>
 
       <details class="preset-card">
         <summary>Presety lokalne</summary>
@@ -892,6 +896,7 @@ const controlsMap = {
   fontSize: requiredElement<HTMLInputElement>('#fontSize'),
   textDepth: requiredElement<HTMLInputElement>('#textDepth'),
   exportBtn: requiredElement<HTMLButtonElement>('#exportBtn'),
+  exportStatus: requiredElement<HTMLElement>('#exportStatus'),
   resetBtn: requiredElement<HTMLButtonElement>('#resetBtn'),
   presetName: requiredElement<HTMLInputElement>('#presetName'),
   savePresetBtn: requiredElement<HTMLButtonElement>('#savePresetBtn'),
@@ -1012,6 +1017,7 @@ scene.add(shadowPlate)
 let activeTagObject: THREE.Object3D | null = null
 let loadedFont: unknown | null = null
 const fontLoader = new FontLoader()
+const ttfLoader = new TTFLoader()
 const svgLoader = new SVGLoader()
 let fontLoadToken = 0
 let frontLogoLoadToken = 0
@@ -1093,6 +1099,11 @@ function setLogoStatus(message: string, isError: boolean): void {
 function setBackLogoStatus(message: string, isError: boolean): void {
   controlsMap.backLogoStatus.textContent = message
   controlsMap.backLogoStatus.style.color = isError ? '#a03939' : ''
+}
+
+function setExportStatus(message: string, isError: boolean): void {
+  controlsMap.exportStatus.textContent = message
+  controlsMap.exportStatus.style.color = isError ? '#a03939' : ''
 }
 
 function setDiceFaceLogoStatus(face: number, message: string, isError: boolean): void {
@@ -1330,9 +1341,10 @@ async function applyCustomFontFromFile(file: File): Promise<void> {
   setFontStatus(`Ladowanie: ${file.name}`, false)
 
   try {
-    const raw = await file.text()
-    const parsed = JSON.parse(raw)
-    const font = fontLoader.parse(parsed as never)
+    const isTtf = file.name.toLowerCase().endsWith('.ttf')
+    const font = isTtf
+      ? fontLoader.parse(ttfLoader.parse(await file.arrayBuffer()) as never)
+      : fontLoader.parse(JSON.parse(await file.text()) as never)
     if (token !== fontLoadToken) {
       return
     }
@@ -1343,7 +1355,7 @@ async function applyCustomFontFromFile(file: File): Promise<void> {
     if (token !== fontLoadToken) {
       return
     }
-    setFontStatus('Niepoprawny plik fontu. Uzyj typeface.json.', true)
+    setFontStatus('Niepoprawny plik fontu. Uzyj .ttf lub typeface.json.', true)
   }
 }
 
@@ -2881,7 +2893,7 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
     debossMesh.material = baseMaterial
     debossMesh.geometry.computeVertexNormals()
 
-    const isThroughCut = config.textDepth >= config.thickness
+    const isThroughCut = Math.abs(config.textDepth) >= config.thickness - 0.0001
     if (isThroughCut) {
       const bridges = createThroughCutBridges(config)
       let bridgedMesh = debossMesh
@@ -2992,6 +3004,403 @@ function animate(): void {
   requestAnimationFrame(animate)
 }
 
+type IndexedTriangle = [number, number, number]
+
+function edgeKey(a: number, b: number): string {
+  return a < b ? `${a}:${b}` : `${b}:${a}`
+}
+
+function collectExportGeometries(object: THREE.Object3D): THREE.BufferGeometry[] {
+  const geometries: THREE.BufferGeometry[] = []
+
+  object.traverse((child) => {
+    const mesh = child as THREE.Mesh
+    const previewRole = (child.userData as { previewRole?: string }).previewRole
+    if (!mesh.isMesh || !mesh.visible || previewRole === 'sphere') {
+      return
+    }
+
+    const worldGeometry = mesh.geometry.clone().toNonIndexed()
+    worldGeometry.applyMatrix4(mesh.matrixWorld)
+
+    Object.keys(worldGeometry.attributes).forEach((name) => {
+      if (name !== 'position') {
+        worldGeometry.deleteAttribute(name)
+      }
+    })
+
+    geometries.push(worldGeometry)
+  })
+
+  return geometries
+}
+
+function readIndexedTriangles(geometry: THREE.BufferGeometry): IndexedTriangle[] {
+  const index = geometry.getIndex()
+  const position = geometry.getAttribute('position')
+  if (!index || !position || index.count < 3) {
+    return []
+  }
+
+  const triangles: IndexedTriangle[] = []
+  for (let i = 0; i + 2 < index.count; i += 3) {
+    const a = index.getX(i)
+    const b = index.getX(i + 1)
+    const c = index.getX(i + 2)
+    if (a === b || b === c || a === c) {
+      continue
+    }
+    triangles.push([a, b, c])
+  }
+
+  return triangles
+}
+
+function analyzeEdgeTopology(triangles: IndexedTriangle[]): {
+  boundaryEdges: Set<string>
+  boundaryVertices: Set<number>
+  nonManifoldEdges: Set<string>
+} {
+  const edgeCounts = new Map<string, number>()
+
+  triangles.forEach(([a, b, c]) => {
+    const keys = [edgeKey(a, b), edgeKey(b, c), edgeKey(c, a)]
+    keys.forEach((key) => edgeCounts.set(key, (edgeCounts.get(key) ?? 0) + 1))
+  })
+
+  const boundaryEdges = new Set<string>()
+  const boundaryVertices = new Set<number>()
+  const nonManifoldEdges = new Set<string>()
+
+  edgeCounts.forEach((count, key) => {
+    if (count === 1) {
+      boundaryEdges.add(key)
+      const [aRaw, bRaw] = key.split(':')
+      boundaryVertices.add(Number(aRaw))
+      boundaryVertices.add(Number(bRaw))
+    } else if (count > 2) {
+      nonManifoldEdges.add(key)
+    }
+  })
+
+  return { boundaryEdges, boundaryVertices, nonManifoldEdges }
+}
+
+function extractBoundaryLoops(boundaryEdges: Set<string>): number[][] {
+  const adjacency = new Map<number, Set<number>>()
+  boundaryEdges.forEach((key) => {
+    const [aRaw, bRaw] = key.split(':')
+    const a = Number(aRaw)
+    const b = Number(bRaw)
+    if (!adjacency.has(a)) adjacency.set(a, new Set<number>())
+    if (!adjacency.has(b)) adjacency.set(b, new Set<number>())
+    adjacency.get(a)?.add(b)
+    adjacency.get(b)?.add(a)
+  })
+
+  const visited = new Set<string>()
+  const loops: number[][] = []
+
+  boundaryEdges.forEach((startEdge) => {
+    if (visited.has(startEdge)) {
+      return
+    }
+
+    const [aRaw, bRaw] = startEdge.split(':')
+    const startA = Number(aRaw)
+    const startB = Number(bRaw)
+    const loop = [startA, startB]
+    visited.add(edgeKey(startA, startB))
+
+    let previous = startA
+    let current = startB
+    let guard = 0
+
+    while (guard < 20000) {
+      guard += 1
+      const neighbors = Array.from(adjacency.get(current) ?? [])
+      if (neighbors.length === 0) {
+        break
+      }
+
+      let next = neighbors.find((n) => n !== previous && !visited.has(edgeKey(current, n)))
+      if (next === undefined) {
+        next = neighbors.find((n) => n === startA)
+      }
+      if (next === undefined) {
+        break
+      }
+
+      visited.add(edgeKey(current, next))
+
+      if (next === startA) {
+        if (loop.length >= 3) {
+          loops.push(loop)
+        }
+        break
+      }
+
+      loop.push(next)
+      previous = current
+      current = next
+    }
+  })
+
+  return loops
+}
+
+function capBoundaryLoopsInGeometry(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const position = geometry.getAttribute('position') as THREE.BufferAttribute | undefined
+  const index = geometry.getIndex()
+  if (!position || !index) {
+    return geometry
+  }
+
+  const baseTriangles = readIndexedTriangles(geometry)
+  const diagnostics = analyzeEdgeTopology(baseTriangles)
+  if (diagnostics.boundaryEdges.size === 0) {
+    return geometry
+  }
+
+  const loops = extractBoundaryLoops(diagnostics.boundaryEdges)
+  if (loops.length === 0) {
+    return geometry
+  }
+
+  const appendedTriangles: number[] = []
+  const pa = new THREE.Vector3()
+  const pb = new THREE.Vector3()
+  const pc = new THREE.Vector3()
+
+  loops.forEach((loop) => {
+    const points3d = loop.map((vertexIndex) =>
+      new THREE.Vector3(position.getX(vertexIndex), position.getY(vertexIndex), position.getZ(vertexIndex)),
+    )
+    if (points3d.length < 3) {
+      return
+    }
+
+    const normal = new THREE.Vector3(0, 0, 0)
+    for (let i = 0; i < points3d.length; i += 1) {
+      const curr = points3d[i]
+      const next = points3d[(i + 1) % points3d.length]
+      normal.x += (curr.y - next.y) * (curr.z + next.z)
+      normal.y += (curr.z - next.z) * (curr.x + next.x)
+      normal.z += (curr.x - next.x) * (curr.y + next.y)
+    }
+
+    if (normal.lengthSq() < 1e-14) {
+      return
+    }
+    normal.normalize()
+
+    const seed = Math.abs(normal.z) < 0.95
+      ? new THREE.Vector3(0, 0, 1)
+      : new THREE.Vector3(0, 1, 0)
+    const tangent = new THREE.Vector3().crossVectors(seed, normal).normalize()
+    const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize()
+
+    const contour2d = points3d.map((p) => new THREE.Vector2(p.dot(tangent), p.dot(bitangent)))
+    const faces = THREE.ShapeUtils.triangulateShape(contour2d, [])
+
+    faces.forEach(([i0, i1, i2]) => {
+      const a = loop[i0]
+      let b = loop[i1]
+      let c = loop[i2]
+      if (a === b || b === c || a === c) {
+        return
+      }
+
+      pa.set(position.getX(a), position.getY(a), position.getZ(a))
+      pb.set(position.getX(b), position.getY(b), position.getZ(b))
+      pc.set(position.getX(c), position.getY(c), position.getZ(c))
+
+      const triNormal = new THREE.Vector3().subVectors(pb, pa).cross(new THREE.Vector3().subVectors(pc, pa))
+      if (triNormal.dot(normal) < 0) {
+        const temp = b
+        b = c
+        c = temp
+      }
+
+      appendedTriangles.push(a, b, c)
+    })
+  })
+
+  if (appendedTriangles.length === 0) {
+    return geometry
+  }
+
+  const combinedIndices: number[] = []
+  for (let i = 0; i < index.count; i += 1) {
+    combinedIndices.push(index.getX(i))
+  }
+  combinedIndices.push(...appendedTriangles)
+
+  const nextGeometry = geometry.clone()
+  nextGeometry.setIndex(combinedIndices)
+  nextGeometry.computeVertexNormals()
+  return nextGeometry
+}
+
+function snapBoundaryVerticesToSurface(
+  geometry: THREE.BufferGeometry,
+  boundaryVertices: Set<number>,
+  bvh: MeshBVH,
+  maxSnapDistance: number,
+): number {
+  const position = geometry.getAttribute('position') as THREE.BufferAttribute | undefined
+  if (!position) {
+    return 0
+  }
+
+  let snappedCount = 0
+  const point = new THREE.Vector3()
+
+  boundaryVertices.forEach((vertexIndex) => {
+    point.set(position.getX(vertexIndex), position.getY(vertexIndex), position.getZ(vertexIndex))
+    const hit = bvh.closestPointToPoint(point, undefined, 1e-8, maxSnapDistance)
+    if (!hit) {
+      return
+    }
+
+    if (hit.distance <= 1e-8 || hit.distance > maxSnapDistance) {
+      return
+    }
+
+    position.setXYZ(vertexIndex, hit.point.x, hit.point.y, hit.point.z)
+    snappedCount += 1
+  })
+
+  if (snappedCount > 0) {
+    position.needsUpdate = true
+  }
+
+  return snappedCount
+}
+
+interface ExportRepairStats {
+  beforeBoundaryEdges: number
+  beforeNonManifoldEdges: number
+  afterBoundaryEdges: number
+  afterNonManifoldEdges: number
+  cappedLoops: number
+}
+
+function createWatertightExportGeometry(
+  object: THREE.Object3D,
+  aggressive = false,
+): { geometry: THREE.BufferGeometry; stats: ExportRepairStats } | null {
+  const sourceGeometries = collectExportGeometries(object)
+  if (sourceGeometries.length === 0) {
+    return null
+  }
+
+  const mergedGeometry = mergeGeometries(sourceGeometries, false)
+  sourceGeometries.forEach((geometry) => geometry.dispose())
+
+  if (!mergedGeometry) {
+    return null
+  }
+
+  const baselineGeometry = mergeVertices(mergedGeometry, 0.000001)
+  const baselineDiagnostics = analyzeEdgeTopology(readIndexedTriangles(baselineGeometry))
+  baselineGeometry.dispose()
+
+  let bestGeometry: THREE.BufferGeometry | null = null
+  let bestScore = Infinity
+  const weldTolerances = aggressive
+    ? [0.00002, 0.00008, 0.0002, 0.0005, 0.001, 0.002, 0.004]
+    : [0.00001, 0.00003, 0.00008, 0.0002, 0.0005, 0.001]
+
+  weldTolerances.forEach((tolerance) => {
+    let candidate = mergeVertices(mergedGeometry, tolerance)
+    candidate.computeVertexNormals()
+
+    const preTriangles = readIndexedTriangles(candidate)
+    const preDiagnostics = analyzeEdgeTopology(preTriangles)
+    const bvh = new MeshBVH(candidate, { maxLeafSize: 20 })
+    const snapDistance = aggressive
+      ? Math.max(tolerance * 8, 0.00008)
+      : Math.max(tolerance * 4, 0.00005)
+    const snappedCount = snapBoundaryVerticesToSurface(candidate, preDiagnostics.boundaryVertices, bvh, snapDistance)
+
+    if (snappedCount > 0) {
+      const weldedAfterSnap = mergeVertices(candidate, tolerance * (aggressive ? 2.2 : 1.5))
+      candidate.dispose()
+      candidate = weldedAfterSnap
+      candidate.computeVertexNormals()
+    }
+
+    const diagnostics = analyzeEdgeTopology(readIndexedTriangles(candidate))
+    const score = diagnostics.boundaryEdges.size + diagnostics.nonManifoldEdges.size * 4
+
+    if (score < bestScore) {
+      if (bestGeometry) {
+        bestGeometry.dispose()
+      }
+      bestGeometry = candidate
+      bestScore = score
+    } else {
+      candidate.dispose()
+    }
+  })
+
+  mergedGeometry.dispose()
+
+  if (!bestGeometry) {
+    return null
+  }
+
+  const repairedGeometry = capBoundaryLoopsInGeometry(bestGeometry)
+  const diagnosticsAfterCap = analyzeEdgeTopology(readIndexedTriangles(repairedGeometry))
+
+  const finalGeometry = mergeVertices(repairedGeometry, aggressive ? 0.00008 : 0.00002)
+  if (finalGeometry !== repairedGeometry) {
+    repairedGeometry.dispose()
+  }
+  finalGeometry.computeVertexNormals()
+  const finalDiagnostics = analyzeEdgeTopology(readIndexedTriangles(finalGeometry))
+
+  return {
+    geometry: finalGeometry,
+    stats: {
+      beforeBoundaryEdges: baselineDiagnostics.boundaryEdges.size,
+      beforeNonManifoldEdges: baselineDiagnostics.nonManifoldEdges.size,
+      afterBoundaryEdges: finalDiagnostics.boundaryEdges.size,
+      afterNonManifoldEdges: finalDiagnostics.nonManifoldEdges.size,
+      cappedLoops: diagnosticsAfterCap.boundaryEdges.size > 0
+        ? Math.max(0, baselineDiagnostics.boundaryEdges.size - diagnosticsAfterCap.boundaryEdges.size)
+        : baselineDiagnostics.boundaryEdges.size,
+    },
+  }
+}
+
+function hasDiceDeboss(config: TagConfig): boolean {
+  if (config.modelType !== 'dice') {
+    return false
+  }
+
+  const textDeboss = [
+    config.diceFaceDepth1,
+    config.diceFaceDepth2,
+    config.diceFaceDepth3,
+    config.diceFaceDepth4,
+    config.diceFaceDepth5,
+    config.diceFaceDepth6,
+  ].some((value) => value < -0.001)
+
+  const logoDeboss = (
+    (config.diceFaceLogoEnabled1 && config.diceFaceLogoDepth1 < -0.001)
+    || (config.diceFaceLogoEnabled2 && config.diceFaceLogoDepth2 < -0.001)
+    || (config.diceFaceLogoEnabled3 && config.diceFaceLogoDepth3 < -0.001)
+    || (config.diceFaceLogoEnabled4 && config.diceFaceLogoDepth4 < -0.001)
+    || (config.diceFaceLogoEnabled5 && config.diceFaceLogoDepth5 < -0.001)
+    || (config.diceFaceLogoEnabled6 && config.diceFaceLogoDepth6 < -0.001)
+  )
+
+  return textDeboss || logoDeboss
+}
+
 function downloadStl(): void {
   if (!activeTagObject) {
     return
@@ -2999,35 +3408,39 @@ function downloadStl(): void {
 
   const exporter = new STLExporter()
   const config = getConfigFromForm()
-  const exportGroup = new THREE.Group()
 
   activeTagObject.updateMatrixWorld(true)
-  activeTagObject.traverse((child) => {
-    const mesh = child as THREE.Mesh
-    const previewRole = (child.userData as { previewRole?: string }).previewRole
-    if (!mesh.isMesh || !mesh.visible || previewRole === 'sphere') {
-      return
-    }
-
-    const exportGeometry = mesh.geometry.clone()
-    exportGeometry.applyMatrix4(mesh.matrixWorld)
-    const exportMesh = new THREE.Mesh(exportGeometry, mesh.material)
-    exportGroup.add(exportMesh)
-  })
-
-  if (exportGroup.children.length === 0) {
+  const repaired = createWatertightExportGeometry(activeTagObject)
+  if (!repaired) {
+    setExportStatus('Eksport STL: brak geometrii do zapisu.', true)
     return
   }
 
-  exportGroup.updateMatrixWorld(true)
-  const data = exporter.parse(exportGroup, { binary: true }) as DataView
+  const baseScore = repaired.stats.afterBoundaryEdges + repaired.stats.afterNonManifoldEdges * 4
+  const baseOpen = repaired.stats.afterBoundaryEdges > 0 || repaired.stats.afterNonManifoldEdges > 0
 
-  exportGroup.traverse((child) => {
-    const mesh = child as THREE.Mesh
-    if (mesh.isMesh) {
-      mesh.geometry.dispose()
+  let selected = repaired
+  let usedAggressiveFallback = false
+
+  if (baseOpen && hasDiceDeboss(config)) {
+    const aggressive = createWatertightExportGeometry(activeTagObject, true)
+    if (aggressive) {
+      const aggressiveScore = aggressive.stats.afterBoundaryEdges + aggressive.stats.afterNonManifoldEdges * 4
+      if (aggressiveScore < baseScore) {
+        repaired.geometry.dispose()
+        selected = aggressive
+        usedAggressiveFallback = true
+      } else {
+        aggressive.geometry.dispose()
+      }
     }
-  })
+  }
+
+  const { geometry: exportGeometry, stats } = selected
+
+  const exportMesh = new THREE.Mesh(exportGeometry, baseMaterial)
+  const data = exporter.parse(exportMesh, { binary: true }) as DataView
+  exportGeometry.dispose()
 
   const binaryStl = new Uint8Array(data.byteLength)
   binaryStl.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
@@ -3039,6 +3452,12 @@ function downloadStl(): void {
   link.download = `${config.text.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
   link.click()
   URL.revokeObjectURL(url)
+
+  const stillOpen = stats.afterBoundaryEdges > 0 || stats.afterNonManifoldEdges > 0
+  setExportStatus(
+    `Eksport STL${usedAggressiveFallback ? ' (fallback: agresywny)' : ''}: boundary ${stats.beforeBoundaryEdges} -> ${stats.afterBoundaryEdges}, non-manifold ${stats.beforeNonManifoldEdges} -> ${stats.afterNonManifoldEdges}`,
+    stillOpen,
+  )
 }
 
 function readPresets(): Record<string, TagConfig> {
@@ -3355,7 +3774,7 @@ function wireEvents(): void {
       saveLastState()
       void applyBuiltinFont(choice)
     } else {
-      setFontStatus('Wybierz plik typeface.json.', false)
+      setFontStatus('Wybierz plik .ttf lub typeface.json.', false)
     }
   })
 

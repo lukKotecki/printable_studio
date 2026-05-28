@@ -17,6 +17,7 @@
     "@jscad/modeling": "^2.13.0",
     "@jscad/stl-serializer": "^2.1.23",
     "three": "^0.184.0",
-    "three-csg-ts": "^3.2.0"
+    "three-csg-ts": "^3.2.0",
+    "three-mesh-bvh": "^0.9.10"
   }
 }
