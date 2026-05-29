@@ -9,8 +9,9 @@ import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { CSG } from 'three-csg-ts'
 
-type ModelType = 'tag' | 'dice'
-type TagShape = 'rounded' | 'capsule' | 'circle'
+type ModelType = 'tag' | 'dice' | 'puzzle'
+type TagShape = 'rounded' | 'capsule' | 'circle' | 'puzzle'
+type LanguageCode = 'pl' | 'en'
 type FontChoice =
   | 'helvetiker'
   | 'optimer'
@@ -88,9 +89,15 @@ interface TagConfig {
   logoEnabled: boolean
   logoSize: number
   logoDepth: number
+  logoOffsetX: number
+  logoOffsetY: number
+  logoRotation: number
   backLogoEnabled: boolean
   backLogoSize: number
   backLogoDepth: number
+  backLogoOffsetX: number
+  backLogoOffsetY: number
+  backLogoRotation: number
 }
 
 const maxTextLines = 4
@@ -164,15 +171,23 @@ const defaultConfig: TagConfig = {
   logoEnabled: false,
   logoSize: 8,
   logoDepth: 0.8,
+  logoOffsetX: 0,
+  logoOffsetY: 0,
+  logoRotation: 0,
   backLogoEnabled: false,
   backLogoSize: 8,
   backLogoDepth: 0.8,
+  backLogoOffsetX: 0,
+  backLogoOffsetY: 0,
+  backLogoRotation: 0,
 }
 
 const presetsStorageKey = 'printable-studio-presets-v1'
 const lastStateStorageKey = 'printable-studio-last-state-v1'
 const panelWidthStorageKey = 'printable-studio-panel-width-v1'
+const languageStorageKey = 'printable-studio-language-v1'
 const defaultFontChoice: Exclude<FontChoice, 'custom'> = 'helvetiker'
+const defaultLanguage: LanguageCode = 'pl'
 
 interface PersistedAppState {
   config: TagConfig
@@ -226,13 +241,25 @@ if (!app) {
 app.innerHTML = `
   <main class="layout">
     <aside class="panel">
-      <h1>Printable Studio</h1>
-      <p class="subtitle">Lokalny generator tagow 3D z eksportem STL.</p>
+      <div class="panel-header">
+        <div>
+          <h1>Printable Studio</h1>
+          <p class="subtitle">Lokalny generator tagow 3D z eksportem STL.</p>
+        </div>
+        <label class="language-switch" for="languageSelect">
+          <span class="visually-hidden">Language</span>
+          <select id="languageSelect" aria-label="Language">
+            <option value="pl">PL</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
 
       <div class="field">
         <label for="modelType">Typ modelu</label>
         <select id="modelType">
           <option value="tag">Plaski tag</option>
+          <option value="puzzle">Puzzle</option>
           <option value="dice">Kostka (kosc do gry)</option>
         </select>
       </div>
@@ -258,7 +285,7 @@ app.innerHTML = `
       </div>
 
       <div id="tagControls">
-        <details class="dice-faces-panel" id="tagBasePanel" open>
+        <details class="dice-faces-panel" id="tagBasePanel">
           <summary>Parametry tagu</summary>
 
           <div class="field">
@@ -267,6 +294,7 @@ app.innerHTML = `
               <option value="rounded">Zaokraglony prostokat</option>
               <option value="capsule">Kapsula</option>
               <option value="circle">Kolo</option>
+              <option value="puzzle">Puzzle</option>
             </select>
           </div>
 
@@ -292,7 +320,7 @@ app.innerHTML = `
             </div>
           </div>
 
-          <div class="grid-2">
+          <div class="grid-2" id="holeSettingsWrap">
             <div class="field">
               <label for="holeDiameter">Srednica otworu (mm)</label>
               <input id="holeDiameter" type="number" min="2" max="12" step="0.5" value="${defaultConfig.holeDiameter}" />
@@ -304,7 +332,7 @@ app.innerHTML = `
           </div>
         </details>
 
-        <details class="dice-faces-panel" id="tagFrontPanel" open>
+        <details class="dice-faces-panel" id="tagFrontPanel">
           <summary>Awers (gora)</summary>
 
           <div class="field">
@@ -343,6 +371,18 @@ app.innerHTML = `
             <div class="field">
               <label for="logoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
               <input id="logoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.logoDepth}" />
+            </div>
+            <div class="field">
+              <label for="logoOffsetX">Przesuniecie logo X (mm)</label>
+              <input id="logoOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.logoOffsetX}" />
+            </div>
+            <div class="field">
+              <label for="logoOffsetY">Przesuniecie logo Y (mm)</label>
+              <input id="logoOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.logoOffsetY}" />
+            </div>
+            <div class="field">
+              <label for="logoRotation">Obrot logo (stopnie)</label>
+              <input id="logoRotation" type="number" min="-180" max="180" step="1" value="${defaultConfig.logoRotation}" />
             </div>
           </div>
         </details>
@@ -387,6 +427,18 @@ app.innerHTML = `
               <label for="backLogoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
               <input id="backLogoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.backLogoDepth}" />
             </div>
+            <div class="field">
+              <label for="backLogoOffsetX">Przesuniecie logo X (mm)</label>
+              <input id="backLogoOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetX}" />
+            </div>
+            <div class="field">
+              <label for="backLogoOffsetY">Przesuniecie logo Y (mm)</label>
+              <input id="backLogoOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetY}" />
+            </div>
+            <div class="field">
+              <label for="backLogoRotation">Obrot logo (stopnie)</label>
+              <input id="backLogoRotation" type="number" min="-180" max="180" step="1" value="${defaultConfig.backLogoRotation}" />
+            </div>
           </div>
         </details>
       </div>
@@ -408,7 +460,7 @@ app.innerHTML = `
           <input id="diceSphereRadius" type="number" min="0" max="100" step="0.1" value="${defaultConfig.diceSphereRadius}" />
         </div>
 
-        <details class="dice-faces-panel" id="dicePreviewPanel" open>
+        <details class="dice-faces-panel" id="dicePreviewPanel">
           <summary>Podglad tymczasowy</summary>
           <div class="grid-2">
             <label class="field-inline">
@@ -780,6 +832,7 @@ const canvas = requiredElement<HTMLCanvasElement>('#viewer')
 const controlsMap = {
   panel: requiredElement<HTMLElement>('.panel'),
   panelResizeHandle: requiredElement<HTMLElement>('#panelResizeHandle'),
+  languageSelect: requiredElement<HTMLSelectElement>('#languageSelect'),
   modelType: requiredElement<HTMLSelectElement>('#modelType'),
   tagControls: requiredElement<HTMLDivElement>('#tagControls'),
   diceControls: requiredElement<HTMLDivElement>('#diceControls'),
@@ -798,6 +851,9 @@ const controlsMap = {
   logoSettingsWrap: requiredElement<HTMLDivElement>('#logoSettingsWrap'),
   logoSize: requiredElement<HTMLInputElement>('#logoSize'),
   logoDepth: requiredElement<HTMLInputElement>('#logoDepth'),
+  logoOffsetX: requiredElement<HTMLInputElement>('#logoOffsetX'),
+  logoOffsetY: requiredElement<HTMLInputElement>('#logoOffsetY'),
+  logoRotation: requiredElement<HTMLInputElement>('#logoRotation'),
   backLogoEnabled: requiredElement<HTMLInputElement>('#backLogoEnabled'),
   backLogoFileWrap: requiredElement<HTMLDivElement>('#backLogoFileWrap'),
   backLogoFile: requiredElement<HTMLInputElement>('#backLogoFile'),
@@ -805,9 +861,13 @@ const controlsMap = {
   backLogoSettingsWrap: requiredElement<HTMLDivElement>('#backLogoSettingsWrap'),
   backLogoSize: requiredElement<HTMLInputElement>('#backLogoSize'),
   backLogoDepth: requiredElement<HTMLInputElement>('#backLogoDepth'),
+  backLogoOffsetX: requiredElement<HTMLInputElement>('#backLogoOffsetX'),
+  backLogoOffsetY: requiredElement<HTMLInputElement>('#backLogoOffsetY'),
+  backLogoRotation: requiredElement<HTMLInputElement>('#backLogoRotation'),
   shape: requiredElement<HTMLSelectElement>('#shape'),
   width: requiredElement<HTMLInputElement>('#width'),
   height: requiredElement<HTMLInputElement>('#height'),
+  holeSettingsWrap: requiredElement<HTMLDivElement>('#holeSettingsWrap'),
   thickness: requiredElement<HTMLInputElement>('#thickness'),
   cornerRadius: requiredElement<HTMLInputElement>('#cornerRadius'),
   holeDiameter: requiredElement<HTMLInputElement>('#holeDiameter'),
@@ -902,6 +962,246 @@ const controlsMap = {
 
 controlsMap.modelType.value = defaultConfig.modelType
 controlsMap.fontChoice.value = defaultFontChoice
+
+interface StatusState {
+  key: string
+  vars?: Record<string, string | number>
+  isError: boolean
+}
+
+let currentLanguage: LanguageCode = defaultLanguage
+let translations: Record<string, string> = {}
+const localeCache: Partial<Record<LanguageCode, Record<string, string>>> = {}
+let fontStatusState: StatusState = { key: 'status.font.select', isError: false }
+let logoStatusState: StatusState = { key: 'status.logo.front.select', isError: false }
+let backLogoStatusState: StatusState = { key: 'status.logo.back.select', isError: false }
+const diceFaceLogoStatusState: Record<number, StatusState> = {
+  1: { key: 'status.dice.logo.empty', isError: false },
+  2: { key: 'status.dice.logo.empty', isError: false },
+  3: { key: 'status.dice.logo.empty', isError: false },
+  4: { key: 'status.dice.logo.empty', isError: false },
+  5: { key: 'status.dice.logo.empty', isError: false },
+  6: { key: 'status.dice.logo.empty', isError: false },
+}
+
+function interpolateTemplate(template: string, vars: Record<string, string | number> = {}): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? `{${key}}`))
+}
+
+function t(key: string, vars: Record<string, string | number> = {}, fallback?: string): string {
+  return interpolateTemplate(translations[key] ?? fallback ?? key, vars)
+}
+
+function readSavedLanguage(): LanguageCode {
+  try {
+    const raw = localStorage.getItem(languageStorageKey)
+    return raw === 'en' ? 'en' : defaultLanguage
+  } catch {
+    return defaultLanguage
+  }
+}
+
+function saveLanguage(language: LanguageCode): void {
+  localStorage.setItem(languageStorageKey, language)
+}
+
+async function loadLocale(language: LanguageCode): Promise<Record<string, string>> {
+  const cached = localeCache[language]
+  if (cached) {
+    return cached
+  }
+
+  const response = await fetch(`/locales/${language}.xml`)
+  if (!response.ok) {
+    throw new Error(`Failed to load locale: ${language}`)
+  }
+
+  const xmlText = await response.text()
+  const xml = new DOMParser().parseFromString(xmlText, 'application/xml')
+  const parsed: Record<string, string> = {}
+
+  xml.querySelectorAll('entry[key]').forEach((entry) => {
+    const key = entry.getAttribute('key')
+    if (!key) {
+      return
+    }
+    parsed[key] = entry.textContent?.trim() ?? ''
+  })
+
+  localeCache[language] = parsed
+  return parsed
+}
+
+function setText(selector: string, key: string, fallback: string): void {
+  const element = document.querySelector<HTMLElement>(selector)
+  if (element) {
+    element.textContent = t(key, {}, fallback)
+  }
+}
+
+function setNthText(selector: string, index: number, key: string, fallback: string): void {
+  const element = document.querySelectorAll<HTMLElement>(selector)[index]
+  if (element) {
+    element.textContent = t(key, {}, fallback)
+  }
+}
+
+function setAttr(selector: string, attribute: string, key: string, fallback: string): void {
+  const element = document.querySelector<HTMLElement>(selector)
+  if (element) {
+    element.setAttribute(attribute, t(key, {}, fallback))
+  }
+}
+
+function renderStatus(target: HTMLElement, state: StatusState): void {
+  target.textContent = t(state.key, state.vars)
+  target.style.color = state.isError ? '#a03939' : ''
+}
+
+function refreshStatusTexts(): void {
+  renderStatus(controlsMap.fontStatus, fontStatusState)
+  renderStatus(controlsMap.logoStatus, logoStatusState)
+  renderStatus(controlsMap.backLogoStatus, backLogoStatusState)
+
+  const statusMap: Record<number, HTMLElement> = {
+    1: controlsMap.diceFaceLogoStatus1,
+    2: controlsMap.diceFaceLogoStatus2,
+    3: controlsMap.diceFaceLogoStatus3,
+    4: controlsMap.diceFaceLogoStatus4,
+    5: controlsMap.diceFaceLogoStatus5,
+    6: controlsMap.diceFaceLogoStatus6,
+  }
+
+  for (const face of [1, 2, 3, 4, 5, 6] as const) {
+    renderStatus(statusMap[face], diceFaceLogoStatusState[face])
+  }
+}
+
+function applyStaticTranslations(): void {
+  document.documentElement.lang = currentLanguage
+  controlsMap.languageSelect.value = currentLanguage
+
+  setText('.subtitle', 'app.subtitle', 'Lokalny generator tagow 3D z eksportem STL.')
+  setText('label[for="modelType"]', 'form.modelType', 'Typ modelu')
+  setText('#modelType option[value="tag"]', 'model.tag', 'Plaski tag')
+  setText('#modelType option[value="puzzle"]', 'model.puzzle', 'Puzzle')
+  setText('#modelType option[value="dice"]', 'model.dice', 'Kostka (kosc do gry)')
+  setText('label[for="fontChoice"]', 'form.font', 'Font')
+  setText('#fontChoice option[value="helvetiker"]', 'font.helvetiker', 'Helvetiker (domyslny)')
+  setText('#fontChoice option[value="notoSansPl"]', 'font.notoSansPl', 'Noto Sans (PL)')
+  setText('#fontChoice option[value="notoSerifPl"]', 'font.notoSerifPl', 'Noto Serif (PL)')
+  setText('#fontChoice option[value="optimer"]', 'font.optimer', 'Optimer')
+  setText('#fontChoice option[value="gentilis"]', 'font.gentilis', 'Gentilis')
+  setText('#fontChoice option[value="droidSans"]', 'font.droidSans', 'Droid Sans')
+  setText('#fontChoice option[value="droidSerif"]', 'font.droidSerif', 'Droid Serif')
+  setText('#fontChoice option[value="custom"]', 'font.custom', 'Wlasny font (.ttf lub typeface.json)')
+  setText('label[for="customFontFile"]', 'font.customFile', 'Wlasny plik fontu')
+
+  setText('#tagBasePanel > summary', 'tag.base.summary', 'Parametry tagu')
+  setText('label[for="shape"]', 'tag.shape', 'Ksztalt')
+  setText('#shape option[value="rounded"]', 'tag.shape.rounded', 'Zaokraglony prostokat')
+  setText('#shape option[value="capsule"]', 'tag.shape.capsule', 'Kapsula')
+  setText('#shape option[value="circle"]', 'tag.shape.circle', 'Kolo')
+  setText('#shape option[value="puzzle"]', 'tag.shape.puzzle', 'Puzzle')
+  setText('label[for="width"]', 'tag.width', 'Szerokosc (mm)')
+  setText('label[for="height"]', 'tag.height', 'Wysokosc (mm)')
+  setText('label[for="thickness"]', 'tag.thickness', 'Grubosc (mm)')
+  setText('label[for="cornerRadius"]', 'tag.cornerRadius', 'Promien rogu (mm)')
+  setText('label[for="holeDiameter"]', 'tag.holeDiameter', 'Srednica otworu (mm)')
+  setText('label[for="holeMargin"]', 'tag.holeMargin', 'Margines otworu (mm)')
+
+  setText('#tagFrontPanel > summary', 'tag.front.summary', 'Awers (gora)')
+  setText('label[for="text"]', 'tag.front.text', 'Napis')
+  setAttr('#text', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
+  setText('label[for="textDepth"]', 'tag.front.textDepth', 'Glebokosc tekstu awersu (mm, ujemna = wklesly)')
+  setText('label[for="fontSize"]', 'tag.front.fontSize', 'Rozmiar tekstu awersu (mm)')
+  setText('#logoEnabled + span', 'tag.front.logoEnabled', 'Dodaj logo SVG')
+  setText('label[for="logoFile"]', 'tag.front.logoFile', 'Plik logo (SVG)')
+  setText('label[for="logoSize"]', 'tag.front.logoSize', 'Rozmiar logo (mm)')
+  setText('label[for="logoDepth"]', 'tag.front.logoDepth', 'Glebokosc logo (mm, ujemna = wklesle)')
+  setText('label[for="logoOffsetX"]', 'tag.front.logoOffsetX', 'Przesuniecie logo X (mm)')
+  setText('label[for="logoOffsetY"]', 'tag.front.logoOffsetY', 'Przesuniecie logo Y (mm)')
+  setText('label[for="logoRotation"]', 'tag.front.logoRotation', 'Obrot logo (stopnie)')
+
+  setText('#tagBackPanel > summary', 'tag.back.summary', 'Rewers (dol)')
+  setText('label[for="backText"]', 'tag.back.text', 'Napis')
+  setAttr('#backText', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
+  setText('label[for="backTextDepth"]', 'tag.back.textDepth', 'Glebokosc tekstu rewersu (mm, ujemna = wklesly)')
+  setText('label[for="backFontSize"]', 'tag.back.fontSize', 'Rozmiar tekstu rewersu (mm)')
+  setText('#backLogoEnabled + span', 'tag.back.logoEnabled', 'Dodaj logo SVG')
+  setText('label[for="backLogoFile"]', 'tag.back.logoFile', 'Plik logo (SVG)')
+  setText('label[for="backLogoSize"]', 'tag.back.logoSize', 'Rozmiar logo (mm)')
+  setText('label[for="backLogoDepth"]', 'tag.back.logoDepth', 'Glebokosc logo (mm, ujemna = wklesle)')
+  setText('label[for="backLogoOffsetX"]', 'tag.back.logoOffsetX', 'Przesuniecie logo X (mm)')
+  setText('label[for="backLogoOffsetY"]', 'tag.back.logoOffsetY', 'Przesuniecie logo Y (mm)')
+  setText('label[for="backLogoRotation"]', 'tag.back.logoRotation', 'Obrot logo (stopnie)')
+
+  setText('label[for="diceSize"]', 'dice.size', 'Rozmiar kostki (mm)')
+  setText('label[for="diceRoundness"]', 'dice.roundness', 'Okraglosc krawedzi (mm)')
+  setText('label[for="diceSphereRadius"]', 'dice.sphereRadius', 'Promien kuli podgladu (mm)')
+  setText('#dicePreviewPanel > summary', 'dice.preview.summary', 'Podglad tymczasowy')
+  setText('#diceShowCube + span', 'dice.preview.showCube', 'Widoczny szescian')
+  setText('#diceShowText + span', 'dice.preview.showText', 'Widoczny tekst')
+  setText('#diceShowSphere + span', 'dice.preview.showSphere', 'Widoczna kula ograniczajaca')
+  setText('#diceClipWithSphere + span', 'dice.preview.clipSphere', 'Scinanie kula ograniczajaca')
+  setText('#diceFacesPanel > summary', 'dice.faces.summary', 'Sciany kostki (kliknij, aby rozwinac)')
+  setText('#diceSvgAutoSimplify + span', 'dice.svg.autoSimplify', 'Auto-upraszczanie SVG kostki')
+  setText('label[for="diceSvgSimplifyStrength"]', 'dice.svg.simplifyStrength', 'Sila uproszczenia (1-5)')
+  setText('#simplifyDiceSvgBtn', 'dice.svg.simplifyButton', 'Uprosc zaladowane SVG')
+  setText('label[for="diceDepthAll"]', 'dice.depthAll', 'Glebokosc wszystkich scian (mm)')
+  setText('#applyDiceDepthAllBtn', 'dice.depthAll.apply', 'Ustaw wszystkie')
+
+  const faceDirections: Record<number, string> = {
+    1: '+Z',
+    2: '-Z',
+    3: '+X',
+    4: '-X',
+    5: '+Y',
+    6: '-Y',
+  }
+  for (const face of [1, 2, 3, 4, 5, 6] as const) {
+    setNthText(`label[for="diceFace${face}"]`, 0, `dice.face.title.${face}`, `Sciana ${face} (${faceDirections[face]})`)
+    setNthText(`label[for="diceFace${face}"]`, 1, 'dice.face.textLabel', 'Napis sciany')
+    setText(`#diceFaceTextEnabled${face} + span`, 'dice.face.textEnabled', 'Wlacz tekst')
+    setText(`label[for="diceFaceDepth${face}"]`, 'dice.face.depth', 'Glebokosc tekstu (mm)')
+    setText(`label[for="diceFaceFontSize${face}"]`, 'dice.face.fontSize', 'Rozmiar czcionki (mm)')
+    setText(`#diceFaceLogoEnabled${face} + span`, 'dice.face.logoEnabled', 'Wlacz grafike SVG')
+    setText(`label[for="diceFaceLogoFile${face}"]`, 'dice.face.logoFile', 'Plik logo SVG')
+    setText(`label[for="diceFaceLogoSize${face}"]`, 'dice.face.logoSize', 'Rozmiar logo (mm)')
+    setText(`label[for="diceFaceLogoDepth${face}"]`, 'dice.face.logoDepth', 'Glebokosc logo (mm)')
+  }
+
+  setText('#resetBtn', 'actions.reset', 'Reset')
+  setText('#exportBtn', 'actions.export', 'Eksport STL')
+  setText('.preset-card > summary', 'presets.summary', 'Presety lokalne')
+  setText('label[for="presetName"]', 'presets.name', 'Nazwa presetu')
+  setAttr('#presetName', 'placeholder', 'presets.name.placeholder', 'np. Tag dla psa')
+  setText('#savePresetBtn', 'presets.save', 'Zapisz preset')
+  setText('#deletePresetBtn', 'presets.delete', 'Usun preset')
+  setText('label[for="presetSelect"]', 'presets.load', 'Wczytaj preset')
+
+  setAttr('#panelResizeHandle', 'aria-label', 'accessibility.panelResize', 'Zmien szerokosc panelu')
+  setAttr('#viewer', 'aria-label', 'accessibility.viewer', 'Podglad 3D')
+  setNthText('.legend span', 0, 'viewer.legend.rotate', 'Lewy przycisk: obrot')
+  setNthText('.legend span', 1, 'viewer.legend.zoom', 'Scroll: zoom')
+  setNthText('.legend span', 2, 'viewer.legend.pan', 'Prawy przycisk: przesuniecie')
+  setAttr('#languageSelect', 'aria-label', 'language.aria', 'Language')
+}
+
+async function setLanguage(language: LanguageCode, persist = true): Promise<void> {
+  try {
+    translations = await loadLocale(language)
+    currentLanguage = language
+    applyStaticTranslations()
+    refreshStatusTexts()
+    refreshPresetSelect()
+    if (persist) {
+      saveLanguage(language)
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -1082,22 +1382,22 @@ function normalizeTextForFont(text: string): string {
   }).join('')
 }
 
-function setFontStatus(message: string, isError: boolean): void {
-  controlsMap.fontStatus.textContent = message
-  controlsMap.fontStatus.style.color = isError ? '#a03939' : ''
+function setFontStatus(key: string, isError: boolean, vars?: Record<string, string | number>): void {
+  fontStatusState = { key, vars, isError }
+  renderStatus(controlsMap.fontStatus, fontStatusState)
 }
 
-function setLogoStatus(message: string, isError: boolean): void {
-  controlsMap.logoStatus.textContent = message
-  controlsMap.logoStatus.style.color = isError ? '#a03939' : ''
+function setLogoStatus(key: string, isError: boolean, vars?: Record<string, string | number>): void {
+  logoStatusState = { key, vars, isError }
+  renderStatus(controlsMap.logoStatus, logoStatusState)
 }
 
-function setBackLogoStatus(message: string, isError: boolean): void {
-  controlsMap.backLogoStatus.textContent = message
-  controlsMap.backLogoStatus.style.color = isError ? '#a03939' : ''
+function setBackLogoStatus(key: string, isError: boolean, vars?: Record<string, string | number>): void {
+  backLogoStatusState = { key, vars, isError }
+  renderStatus(controlsMap.backLogoStatus, backLogoStatusState)
 }
 
-function setDiceFaceLogoStatus(face: number, message: string, isError: boolean): void {
+function setDiceFaceLogoStatus(face: number, key: string, isError: boolean, vars?: Record<string, string | number>): void {
   const statusMap: Record<number, HTMLElement> = {
     1: controlsMap.diceFaceLogoStatus1,
     2: controlsMap.diceFaceLogoStatus2,
@@ -1107,8 +1407,8 @@ function setDiceFaceLogoStatus(face: number, message: string, isError: boolean):
     6: controlsMap.diceFaceLogoStatus6,
   }
   const target = statusMap[face]
-  target.textContent = message
-  target.style.color = isError ? '#a03939' : ''
+  diceFaceLogoStatusState[face] = { key, vars, isError }
+  renderStatus(target, diceFaceLogoStatusState[face])
 }
 
 function setDiceFaceLogoEnabled(face: number, enabled: boolean): void {
@@ -1231,8 +1531,18 @@ function updateAllDiceFaceOptionVisibility(): void {
 function updateModelControlsVisibility(): void {
   const modelType = controlsMap.modelType.value as ModelType
   const isDice = modelType === 'dice'
+  const isPuzzle = modelType === 'puzzle'
   controlsMap.tagControls.style.display = isDice ? 'none' : ''
   controlsMap.diceControls.style.display = isDice ? '' : 'none'
+  controlsMap.shape.disabled = isPuzzle
+  controlsMap.height.disabled = isPuzzle
+  controlsMap.holeSettingsWrap.style.display = isPuzzle ? 'none' : ''
+  if (isPuzzle) {
+    controlsMap.shape.value = 'puzzle'
+    controlsMap.height.value = controlsMap.width.value
+  } else if (controlsMap.shape.value === 'puzzle') {
+    controlsMap.shape.value = 'rounded'
+  }
   shadowPlate.visible = !isDice
 }
 
@@ -1309,7 +1619,7 @@ function loadFontFromUrl(url: string): Promise<unknown> {
 
 async function applyBuiltinFont(choice: Exclude<FontChoice, 'custom'>): Promise<void> {
   const token = ++fontLoadToken
-  setFontStatus('Ladowanie fontu...', false)
+  setFontStatus('status.font.loadingBuiltin', false)
 
   try {
     const font = await loadFontFromUrl(builtinFontUrls[choice])
@@ -1317,19 +1627,19 @@ async function applyBuiltinFont(choice: Exclude<FontChoice, 'custom'>): Promise<
       return
     }
     loadedFont = font
-    setFontStatus('Font zaladowany.', false)
+    setFontStatus('status.font.loaded', false)
     rebuildTag()
   } catch {
     if (token !== fontLoadToken) {
       return
     }
-    setFontStatus('Nie udalo sie zaladowac fontu.', true)
+    setFontStatus('status.font.loadError', true)
   }
 }
 
 async function applyCustomFontFromFile(file: File): Promise<void> {
   const token = ++fontLoadToken
-  setFontStatus(`Ladowanie: ${file.name}`, false)
+  setFontStatus('status.font.loadingCustom', false, { name: file.name })
 
   try {
     const isTtf = file.name.toLowerCase().endsWith('.ttf')
@@ -1342,13 +1652,13 @@ async function applyCustomFontFromFile(file: File): Promise<void> {
     }
 
     loadedFont = font
-    setFontStatus(`Wlasny font zaladowany: ${file.name}`, false)
+    setFontStatus('status.font.customLoaded', false, { name: file.name })
     rebuildTag()
   } catch {
     if (token !== fontLoadToken) {
       return
     }
-    setFontStatus('Niepoprawny plik fontu. Uzyj .ttf lub typeface.json.', true)
+    setFontStatus('status.font.invalid', true)
   }
 }
 
@@ -1524,14 +1834,14 @@ function simplifyAllLoadedDiceSvg(): void {
     const simplifiedShapes = simplifyDiceFaceShapesForLoad(currentShapes)
     if (simplifiedShapes.length === 0) {
       setDiceFaceLogoShapes(face, [])
-      setDiceFaceLogoStatus(face, 'SVG usuniete po uproszczeniu (zbyt malo danych).', true)
+      setDiceFaceLogoStatus(face, 'status.dice.logo.removed', true)
       changedFaces += 1
       return
     }
 
     setDiceFaceLogoShapes(face, simplifiedShapes)
     const afterComplexity = estimateSvgShapeComplexity(simplifiedShapes)
-    setDiceFaceLogoStatus(face, `SVG uproszczone: ${beforeComplexity} -> ${afterComplexity} pkt`, false)
+    setDiceFaceLogoStatus(face, 'status.dice.logo.simplified', false, { before: beforeComplexity, after: afterComplexity })
     changedFaces += 1
   })
 
@@ -1543,7 +1853,7 @@ function simplifyAllLoadedDiceSvg(): void {
 
 async function applyFrontLogoFromFile(file: File): Promise<void> {
   const token = ++frontLogoLoadToken
-  setLogoStatus(`Ladowanie logo: ${file.name}`, false)
+  setLogoStatus('status.logo.loading', false, { name: file.name })
 
   try {
     const raw = await file.text()
@@ -1562,20 +1872,20 @@ async function applyFrontLogoFromFile(file: File): Promise<void> {
     loadedLogoShapes = normalizedShapes
     controlsMap.logoEnabled.checked = true
     updateLogoControlsVisibility()
-    setLogoStatus(`Logo zaladowane: ${file.name}`, false)
+    setLogoStatus('status.logo.loaded', false, { name: file.name })
     rebuildTag()
   } catch {
     if (token !== frontLogoLoadToken) {
       return
     }
     loadedLogoShapes = []
-    setLogoStatus('Niepoprawny plik SVG albo brak sciezek wektorowych.', true)
+    setLogoStatus('status.logo.invalid', true)
   }
 }
 
 async function applyBackLogoFromFile(file: File): Promise<void> {
   const token = ++backLogoLoadToken
-  setBackLogoStatus(`Ladowanie logo: ${file.name}`, false)
+  setBackLogoStatus('status.logo.loading', false, { name: file.name })
 
   try {
     const raw = await file.text()
@@ -1594,20 +1904,20 @@ async function applyBackLogoFromFile(file: File): Promise<void> {
     loadedBackLogoShapes = normalizedShapes
     controlsMap.backLogoEnabled.checked = true
     updateBackLogoControlsVisibility()
-    setBackLogoStatus(`Logo zaladowane: ${file.name}`, false)
+    setBackLogoStatus('status.logo.loaded', false, { name: file.name })
     rebuildTag()
   } catch {
     if (token !== backLogoLoadToken) {
       return
     }
     loadedBackLogoShapes = []
-    setBackLogoStatus('Niepoprawny plik SVG albo brak sciezek wektorowych.', true)
+    setBackLogoStatus('status.logo.invalid', true)
   }
 }
 
 async function applyDiceFaceLogoFromFile(face: number, file: File): Promise<void> {
   const token = nextDiceFaceLogoToken(face)
-  setDiceFaceLogoStatus(face, `Ladowanie logo: ${file.name}`, false)
+  setDiceFaceLogoStatus(face, 'status.logo.loading', false, { name: file.name })
 
   try {
     const raw = await file.text()
@@ -1635,7 +1945,7 @@ async function applyDiceFaceLogoFromFile(face: number, file: File): Promise<void
 
     setDiceFaceLogoShapes(face, simplifiedShapes)
     setDiceFaceLogoEnabled(face, true)
-    setDiceFaceLogoStatus(face, `Logo zaladowane: ${file.name}`, false)
+    setDiceFaceLogoStatus(face, 'status.logo.loaded', false, { name: file.name })
     rebuildTag()
   } catch (error) {
     if (!isDiceFaceLogoTokenCurrent(face, token)) {
@@ -1643,8 +1953,8 @@ async function applyDiceFaceLogoFromFile(face: number, file: File): Promise<void
     }
     setDiceFaceLogoShapes(face, [])
     const message = error instanceof Error && error.message === 'svg-too-complex'
-      ? 'SVG jest zbyt zlozony. Wlacz auto-upraszczanie lub kliknij "Uprosc zaladowane SVG".'
-      : 'Niepoprawny plik SVG.'
+      ? 'status.dice.logo.tooComplex'
+      : 'status.logo.invalidShort'
     setDiceFaceLogoStatus(face, message, true)
   }
 }
@@ -1734,30 +2044,62 @@ function cloneShiftedShape(shape: THREE.Shape, offsetX: number, offsetY: number)
   return shiftedShape
 }
 
-function cloneScaledShape(shape: THREE.Shape, scale: number, samplePoints = 30): THREE.Shape {
+function cloneTransformedShape(
+  shape: THREE.Shape,
+  scale: number,
+  offsetX: number,
+  offsetY: number,
+  rotationRad: number,
+  samplePoints = 30,
+): THREE.Shape {
   const pointCount = clamp(Math.round(samplePoints), 8, 80)
-  const scaledOuter = shape.getPoints(pointCount).map((p) => new THREE.Vector2(p.x * scale, p.y * scale))
+  const cosAngle = Math.cos(rotationRad)
+  const sinAngle = Math.sin(rotationRad)
+  const transformPoint = (point: THREE.Vector2): THREE.Vector2 => {
+    const scaledX = point.x * scale
+    const scaledY = point.y * scale
+    const rotatedX = scaledX * cosAngle - scaledY * sinAngle
+    const rotatedY = scaledX * sinAngle + scaledY * cosAngle
+    return new THREE.Vector2(rotatedX + offsetX, rotatedY + offsetY)
+  }
+
+  const scaledOuter = shape.getPoints(pointCount).map(transformPoint)
   const scaledShape = shapeFromPoints(scaledOuter)
 
   shape.holes.forEach((holePath) => {
-    const scaledHole = holePath.getPoints(pointCount).map((p) => new THREE.Vector2(p.x * scale, p.y * scale))
+    const scaledHole = holePath.getPoints(pointCount).map(transformPoint)
     scaledShape.holes.push(pathFromPoints(scaledHole))
   })
 
   return scaledShape
 }
 
-function createLogoGeometries(shapes: THREE.Shape[], size: number, depth: number, curveSegments = 28): THREE.ExtrudeGeometry[] {
+interface LogoTransformOptions {
+  offsetX?: number
+  offsetY?: number
+  rotationDeg?: number
+}
+
+function createLogoGeometries(
+  shapes: THREE.Shape[],
+  size: number,
+  depth: number,
+  curveSegments = 28,
+  transform: LogoTransformOptions = {},
+): THREE.ExtrudeGeometry[] {
   if (shapes.length === 0) {
     return []
   }
 
   const extrudeDepth = clamp(Math.abs(depth), 0.2, 8)
   const scale = clamp(size, 2, 40)
+  const offsetX = clamp(transform.offsetX ?? 0, -80, 80)
+  const offsetY = clamp(transform.offsetY ?? 0, -80, 80)
+  const rotationRad = THREE.MathUtils.degToRad(clamp(transform.rotationDeg ?? 0, -180, 180))
   const shapeSamplePoints = clamp(Math.round(curveSegments * 1.5), 8, 80)
 
   return shapes.map((shape) => {
-    const scaledShape = cloneScaledShape(shape, scale, shapeSamplePoints)
+    const scaledShape = cloneTransformedShape(shape, scale, offsetX, offsetY, rotationRad, shapeSamplePoints)
     const geometry = new THREE.ExtrudeGeometry(scaledShape, {
       depth: extrudeDepth,
       bevelEnabled: false,
@@ -1773,7 +2115,11 @@ function createTagLogoObject(config: TagConfig): THREE.Object3D | null {
     return null
   }
 
-  const geometries = createLogoGeometries(loadedLogoShapes, config.logoSize, Math.abs(config.logoDepth))
+  const geometries = createLogoGeometries(loadedLogoShapes, config.logoSize, Math.abs(config.logoDepth), 28, {
+    offsetX: config.logoOffsetX,
+    offsetY: config.logoOffsetY,
+    rotationDeg: config.logoRotation,
+  })
   if (geometries.length === 0) {
     return null
   }
@@ -1795,7 +2141,11 @@ function createTagLogoCutters(config: TagConfig): THREE.Mesh[] {
 
   const seamOverlap = 0.2
   const cutterDepth = Math.abs(config.logoDepth) + seamOverlap
-  const geometries = createLogoGeometries(loadedLogoShapes, config.logoSize, cutterDepth)
+  const geometries = createLogoGeometries(loadedLogoShapes, config.logoSize, cutterDepth, 28, {
+    offsetX: config.logoOffsetX,
+    offsetY: config.logoOffsetY,
+    rotationDeg: config.logoRotation,
+  })
 
   return geometries.map((geometry) => {
     const cutter = new THREE.Mesh(geometry, baseMaterial)
@@ -1899,7 +2249,11 @@ function createBackLogoObject(config: TagConfig): THREE.Object3D | null {
     return null
   }
 
-  const geometries = createLogoGeometries(loadedBackLogoShapes, config.backLogoSize, Math.abs(config.backLogoDepth))
+  const geometries = createLogoGeometries(loadedBackLogoShapes, config.backLogoSize, Math.abs(config.backLogoDepth), 28, {
+    offsetX: config.backLogoOffsetX,
+    offsetY: config.backLogoOffsetY,
+    rotationDeg: config.backLogoRotation,
+  })
   if (geometries.length === 0) {
     return null
   }
@@ -1923,7 +2277,11 @@ function createBackLogoCutters(config: TagConfig): THREE.Mesh[] {
 
   const seamOverlap = 0.2
   const cutterDepth = Math.abs(config.backLogoDepth) + seamOverlap
-  const geometries = createLogoGeometries(loadedBackLogoShapes, config.backLogoSize, cutterDepth)
+  const geometries = createLogoGeometries(loadedBackLogoShapes, config.backLogoSize, cutterDepth, 28, {
+    offsetX: config.backLogoOffsetX,
+    offsetY: config.backLogoOffsetY,
+    rotationDeg: config.backLogoRotation,
+  })
 
   return geometries.map((geometry) => {
     const cutter = new THREE.Mesh(geometry, baseMaterial)
@@ -2048,12 +2406,17 @@ function createThroughCutBridges(config: TagConfig): THREE.Mesh[] {
 
 function getConfigFromForm(): TagConfig {
   const rawModelType = controlsMap.modelType.value as ModelType
-  const modelType: ModelType = rawModelType === 'dice' ? 'dice' : 'tag'
+  const modelType: ModelType = rawModelType === 'dice' ? 'dice' : rawModelType === 'puzzle' ? 'puzzle' : 'tag'
   const rawShape = controlsMap.shape.value as TagShape
-  const shape: TagShape = rawShape === 'capsule' || rawShape === 'circle' ? rawShape : 'rounded'
+  const shape: TagShape = modelType === 'puzzle'
+    ? 'puzzle'
+    : rawShape === 'capsule' || rawShape === 'circle' || rawShape === 'puzzle'
+      ? rawShape
+      : 'rounded'
 
-  const width = clamp(Number(controlsMap.width.value), 20, 120)
-  const height = clamp(Number(controlsMap.height.value), 15, 60)
+  const puzzleSize = clamp(Number(controlsMap.width.value), 20, 120)
+  const width = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.width.value), 20, 120)
+  const height = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.height.value), 15, 60)
   const thickness = clamp(Number(controlsMap.thickness.value), 1.5, 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
@@ -2107,9 +2470,15 @@ function getConfigFromForm(): TagConfig {
   const logoEnabled = controlsMap.logoEnabled.checked
   const logoSize = clamp(Number(controlsMap.logoSize.value), 2, 40)
   const logoDepth = clamp(Number(controlsMap.logoDepth.value), -8, 8)
+  const logoOffsetX = clamp(Number(controlsMap.logoOffsetX.value), -60, 60)
+  const logoOffsetY = clamp(Number(controlsMap.logoOffsetY.value), -60, 60)
+  const logoRotation = clamp(Number(controlsMap.logoRotation.value), -180, 180)
   const backLogoEnabled = controlsMap.backLogoEnabled.checked
   const backLogoSize = clamp(Number(controlsMap.backLogoSize.value), 2, 40)
   const backLogoDepth = clamp(Number(controlsMap.backLogoDepth.value), -8, 8)
+  const backLogoOffsetX = clamp(Number(controlsMap.backLogoOffsetX.value), -60, 60)
+  const backLogoOffsetY = clamp(Number(controlsMap.backLogoOffsetY.value), -60, 60)
+  const backLogoRotation = clamp(Number(controlsMap.backLogoRotation.value), -180, 180)
 
   return {
     modelType,
@@ -2178,9 +2547,15 @@ function getConfigFromForm(): TagConfig {
     logoEnabled,
     logoSize,
     logoDepth,
+    logoOffsetX,
+    logoOffsetY,
+    logoRotation,
     backLogoEnabled,
     backLogoSize,
     backLogoDepth,
+    backLogoOffsetX,
+    backLogoOffsetY,
+    backLogoRotation,
   }
 }
 
@@ -2190,7 +2565,7 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.backText.value = config.backText
   controlsMap.shape.value = config.shape
   controlsMap.width.value = String(config.width)
-  controlsMap.height.value = String(config.height)
+  controlsMap.height.value = String(config.modelType === 'puzzle' ? config.width : config.height)
   controlsMap.thickness.value = String(config.thickness)
   controlsMap.cornerRadius.value = String(config.cornerRadius)
   controlsMap.holeDiameter.value = String(config.holeDiameter)
@@ -2252,9 +2627,15 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.logoEnabled.checked = Boolean(config.logoEnabled)
   controlsMap.logoSize.value = String(config.logoSize)
   controlsMap.logoDepth.value = String(config.logoDepth)
+  controlsMap.logoOffsetX.value = String(config.logoOffsetX)
+  controlsMap.logoOffsetY.value = String(config.logoOffsetY)
+  controlsMap.logoRotation.value = String(config.logoRotation)
   controlsMap.backLogoEnabled.checked = Boolean(config.backLogoEnabled)
   controlsMap.backLogoSize.value = String(config.backLogoSize)
   controlsMap.backLogoDepth.value = String(config.backLogoDepth)
+  controlsMap.backLogoOffsetX.value = String(config.backLogoOffsetX)
+  controlsMap.backLogoOffsetY.value = String(config.backLogoOffsetY)
+  controlsMap.backLogoRotation.value = String(config.backLogoRotation)
   updateAllDiceFaceOptionVisibility()
   updateModelControlsVisibility()
   updateLogoControlsVisibility()
@@ -2278,18 +2659,92 @@ function roundedRectShape(width: number, height: number, radius: number): THREE.
   return shape
 }
 
+function createPuzzlePieceShape(width: number, height: number): THREE.Shape {
+  const size = Math.min(width, height)
+  const halfSize = size / 2
+  const toothSize = 5
+  const toothDepth = 5
+  const segmentCount = Math.max(1, Math.floor(size / toothSize))
+  const coveredSpan = segmentCount * toothSize
+  const edgeMargin = (size - coveredSpan) / 2
+  const points: THREE.Vector2[] = []
+  const isToothSegment = (index: number): boolean => index % 2 === 1
+
+  const pushPoint = (x: number, y: number): void => {
+    const lastPoint = points.at(-1)
+    if (!lastPoint || Math.abs(lastPoint.x - x) > 0.0001 || Math.abs(lastPoint.y - y) > 0.0001) {
+      points.push(new THREE.Vector2(x, y))
+    }
+  }
+
+  pushPoint(-halfSize, -halfSize)
+  pushPoint(-halfSize + edgeMargin, -halfSize)
+
+  for (let i = 0; i < segmentCount; i += 1) {
+    const x1 = -halfSize + edgeMargin + i * toothSize
+    const x2 = x1 + toothSize
+    const y = -halfSize + (isToothSegment(i) ? -toothDepth : 0)
+    pushPoint(x1, y)
+    pushPoint(x2, y)
+    pushPoint(x2, -halfSize)
+  }
+  pushPoint(halfSize, -halfSize)
+  pushPoint(halfSize, -halfSize + edgeMargin)
+
+  for (let i = 0; i < segmentCount; i += 1) {
+    const y1 = -halfSize + edgeMargin + i * toothSize
+    const y2 = y1 + toothSize
+    const x = halfSize + (isToothSegment(i) ? toothDepth : 0)
+    pushPoint(x, y1)
+    pushPoint(x, y2)
+    pushPoint(halfSize, y2)
+  }
+  pushPoint(halfSize, halfSize)
+  pushPoint(halfSize - edgeMargin, halfSize)
+
+  for (let i = 0; i < segmentCount; i += 1) {
+    const x1 = halfSize - edgeMargin - i * toothSize
+    const x2 = x1 - toothSize
+    const y = halfSize + (isToothSegment(i) ? -toothDepth : 0)
+    pushPoint(x1, y)
+    pushPoint(x2, y)
+    pushPoint(x2, halfSize)
+  }
+  pushPoint(-halfSize, halfSize)
+  pushPoint(-halfSize, halfSize - edgeMargin)
+
+  for (let i = 0; i < segmentCount; i += 1) {
+    const y1 = halfSize - edgeMargin - i * toothSize
+    const y2 = y1 - toothSize
+    const x = -halfSize + (isToothSegment(i) ? toothDepth : 0)
+    pushPoint(x, y1)
+    pushPoint(x, y2)
+    pushPoint(-halfSize, y2)
+  }
+  pushPoint(-halfSize, -halfSize)
+
+  return shapeFromPoints(points)
+}
+
 function createBaseShape(config: TagConfig): THREE.Shape {
   const halfWidth = config.width / 2
-  const holeRadius = config.holeDiameter / 2
 
   let shape: THREE.Shape
   if (config.shape === 'circle') {
     shape = new THREE.Shape()
     shape.absarc(0, 0, halfWidth, 0, Math.PI * 2, false)
+  } else if (config.shape === 'puzzle') {
+    shape = createPuzzlePieceShape(config.width, config.height)
   } else {
     const radius = config.shape === 'capsule' ? config.height / 2 : config.cornerRadius
     shape = roundedRectShape(config.width, config.height, radius)
   }
+
+  if (config.shape === 'puzzle') {
+    return shape
+  }
+
+  const holeRadius = config.holeDiameter / 2
 
   const minHoleX = -halfWidth + holeRadius + 0.7
   const maxHoleX = halfWidth - holeRadius - 0.7
@@ -3041,7 +3496,19 @@ function downloadStl(): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `${config.text.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
+
+  if (config.modelType === 'dice') {
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, '0')
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const yyyy = String(now.getFullYear())
+    const hh = String(now.getHours()).padStart(2, '0')
+    const min = String(now.getMinutes()).padStart(2, '0')
+    link.download = `DICE_D6_${dd}-${mm}-${yyyy}_${hh}:${min}.stl`
+  } else {
+    link.download = `${config.text.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
+  }
+
   link.click()
   URL.revokeObjectURL(url)
 }
@@ -3104,13 +3571,23 @@ function saveLastState(): void {
 function refreshPresetSelect(): void {
   const presets = readPresets()
   const names = Object.keys(presets).sort((a, b) => a.localeCompare(b))
-  controlsMap.presetSelect.innerHTML = '<option value="">-- wybierz --</option>'
+  const selectedValue = controlsMap.presetSelect.value
+  controlsMap.presetSelect.innerHTML = `<option value="">${t('presets.selectPlaceholder', {}, '-- wybierz --')}</option>`
   names.forEach((name) => {
     const option = document.createElement('option')
     option.value = name
     option.textContent = name
     controlsMap.presetSelect.append(option)
   })
+  if (selectedValue && names.includes(selectedValue)) {
+    controlsMap.presetSelect.value = selectedValue
+  }
+}
+
+function syncPuzzleDimensionsInForm(): void {
+  if (controlsMap.modelType.value === 'puzzle') {
+    controlsMap.height.value = controlsMap.width.value
+  }
 }
 
 function wireEvents(): void {
@@ -3123,9 +3600,15 @@ function wireEvents(): void {
     controlsMap.logoEnabled,
     controlsMap.logoSize,
     controlsMap.logoDepth,
+    controlsMap.logoOffsetX,
+    controlsMap.logoOffsetY,
+    controlsMap.logoRotation,
     controlsMap.backLogoEnabled,
     controlsMap.backLogoSize,
     controlsMap.backLogoDepth,
+    controlsMap.backLogoOffsetX,
+    controlsMap.backLogoOffsetY,
+    controlsMap.backLogoRotation,
     controlsMap.shape,
     controlsMap.width,
     controlsMap.height,
@@ -3211,6 +3694,15 @@ function wireEvents(): void {
 
   controlsMap.modelType.addEventListener('change', () => {
     updateModelControlsVisibility()
+    syncPuzzleDimensionsInForm()
+  })
+
+  controlsMap.width.addEventListener('input', () => {
+    syncPuzzleDimensionsInForm()
+  })
+
+  controlsMap.width.addEventListener('change', () => {
+    syncPuzzleDimensionsInForm()
   })
 
   controlsMap.diceFaceTextEnabled1.addEventListener('change', () => {
@@ -3360,8 +3852,13 @@ function wireEvents(): void {
       saveLastState()
       void applyBuiltinFont(choice)
     } else {
-      setFontStatus('Wybierz plik .ttf lub typeface.json.', false)
+      setFontStatus('status.font.select', false)
     }
+  })
+
+  controlsMap.languageSelect.addEventListener('change', () => {
+    const nextLanguage = controlsMap.languageSelect.value === 'en' ? 'en' : 'pl'
+    void setLanguage(nextLanguage)
   })
 
   controlsMap.customFontFile.addEventListener('change', () => {
@@ -3426,7 +3923,7 @@ function wireEvents(): void {
   window.addEventListener('resize', resizeRenderer)
 }
 
-function start(): void {
+async function start(): Promise<void> {
   const savedPanelWidth = readPanelWidth()
   if (savedPanelWidth !== null) {
     applyPanelWidth(savedPanelWidth)
@@ -3440,8 +3937,8 @@ function start(): void {
   }
 
   wirePanelResize()
-  refreshPresetSelect()
   wireEvents()
+  await setLanguage(readSavedLanguage(), false)
   resizeRenderer()
   animate()
   updateModelControlsVisibility()
@@ -3453,5 +3950,5 @@ function start(): void {
   void applyBuiltinFont(fontToLoad)
 }
 
-start()
+void start()
 
