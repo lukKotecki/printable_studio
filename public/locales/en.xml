@@ -16,6 +16,8 @@
   <entry key="font.custom">Custom font (.ttf or typeface.json)</entry>
   <entry key="font.customFile">Custom font file</entry>
   <entry key="tag.base.summary">Tag parameters</entry>
+  <entry key="tag.base.summary.tag">Tag parameters</entry>
+  <entry key="tag.base.summary.puzzle">Puzzle parameters</entry>
   <entry key="tag.shape">Shape</entry>
   <entry key="tag.shape.rounded">Rounded rectangle</entry>
   <entry key="tag.shape.capsule">Capsule</entry>
@@ -27,13 +29,15 @@
   <entry key="tag.cornerRadius">Corner radius (mm)</entry>
   <entry key="tag.holeDiameter">Hole diameter (mm)</entry>
   <entry key="tag.holeMargin">Hole margin (mm)</entry>
+  <entry key="tag.holeOffsetX">Hole offset X (mm)</entry>
+  <entry key="tag.holeOffsetY">Hole offset Y (mm)</entry>
   <entry key="tag.front.summary">Front</entry>
   <entry key="tag.front.text">Text</entry>
   <entry key="tag.text.placeholder">Enter a few lines of text</entry>
   <entry key="tag.front.textDepth">Front text depth (mm, negative = debossed)</entry>
   <entry key="tag.front.fontSize">Front text size (mm)</entry>
-  <entry key="tag.front.logoEnabled">Add SVG logo</entry>
-  <entry key="tag.front.logoFile">Logo file (SVG)</entry>
+  <entry key="tag.front.logoEnabled">Add SVG/PNG logo</entry>
+  <entry key="tag.front.logoFile">Logo file (SVG or PNG)</entry>
   <entry key="tag.front.logoSize">Logo size (mm)</entry>
   <entry key="tag.front.logoDepth">Logo depth (mm, negative = debossed)</entry>
   <entry key="tag.front.logoOffsetX">Logo offset X (mm)</entry>
@@ -43,8 +47,8 @@
   <entry key="tag.back.text">Text</entry>
   <entry key="tag.back.textDepth">Back text depth (mm, negative = debossed)</entry>
   <entry key="tag.back.fontSize">Back text size (mm)</entry>
-  <entry key="tag.back.logoEnabled">Add SVG logo</entry>
-  <entry key="tag.back.logoFile">Logo file (SVG)</entry>
+  <entry key="tag.back.logoEnabled">Add SVG/PNG logo</entry>
+  <entry key="tag.back.logoFile">Logo file (SVG or PNG)</entry>
   <entry key="tag.back.logoSize">Logo size (mm)</entry>
   <entry key="tag.back.logoDepth">Logo depth (mm, negative = debossed)</entry>
   <entry key="tag.back.logoOffsetX">Logo offset X (mm)</entry>
@@ -53,7 +57,8 @@
   <entry key="dice.size">Dice size (mm)</entry>
   <entry key="dice.roundness">Edge roundness (mm)</entry>
   <entry key="dice.sphereRadius">Preview sphere radius (mm)</entry>
-  <entry key="dice.preview.summary">Temporary preview</entry>
+  <entry key="dice.params.summary">Dice parameters</entry>
+  <entry key="dice.preview.summary">Advanced</entry>
   <entry key="dice.preview.showCube">Show cube</entry>
   <entry key="dice.preview.showText">Show text</entry>
   <entry key="dice.preview.showSphere">Show bounding sphere</entry>
@@ -74,8 +79,8 @@
   <entry key="dice.face.textEnabled">Enable text</entry>
   <entry key="dice.face.depth">Text depth (mm)</entry>
   <entry key="dice.face.fontSize">Font size (mm)</entry>
-  <entry key="dice.face.logoEnabled">Enable SVG artwork</entry>
-  <entry key="dice.face.logoFile">SVG logo file</entry>
+  <entry key="dice.face.logoEnabled">Enable SVG/PNG artwork</entry>
+  <entry key="dice.face.logoFile">SVG/PNG logo file</entry>
   <entry key="dice.face.logoSize">Logo size (mm)</entry>
   <entry key="dice.face.logoDepth">Logo depth (mm)</entry>
   <entry key="actions.reset">Reset</entry>
@@ -99,13 +104,13 @@
   <entry key="status.font.loadingCustom">Loading: {name}</entry>
   <entry key="status.font.customLoaded">Custom font loaded: {name}</entry>
   <entry key="status.font.invalid">Invalid font file. Use .ttf or typeface.json.</entry>
-  <entry key="status.logo.front.select">Choose an SVG file for the front.</entry>
-  <entry key="status.logo.back.select">Choose an SVG file for the back.</entry>
+  <entry key="status.logo.front.select">Choose an SVG or PNG file for the front.</entry>
+  <entry key="status.logo.back.select">Choose an SVG or PNG file for the back.</entry>
   <entry key="status.logo.loading">Loading logo: {name}</entry>
   <entry key="status.logo.loaded">Logo loaded: {name}</entry>
-  <entry key="status.logo.invalid">Invalid SVG file or no vector paths found.</entry>
-  <entry key="status.logo.invalidShort">Invalid SVG file.</entry>
-  <entry key="status.dice.logo.empty">SVG: none</entry>
+  <entry key="status.logo.invalid">Invalid SVG/PNG file or no usable contour found.</entry>
+  <entry key="status.logo.invalidShort">Invalid SVG/PNG file.</entry>
+  <entry key="status.dice.logo.empty">Logo: none</entry>
   <entry key="status.dice.logo.removed">SVG removed after simplification (not enough data).</entry>
   <entry key="status.dice.logo.simplified">SVG simplified: {before} -&gt; {after} pts</entry>
   <entry key="status.dice.logo.tooComplex">SVG is too complex. Enable auto-simplify or click “Simplify loaded SVGs”.</entry>

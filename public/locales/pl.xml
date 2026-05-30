@@ -16,6 +16,8 @@
   <entry key="font.custom">Wlasny font (.ttf lub typeface.json)</entry>
   <entry key="font.customFile">Wlasny plik fontu</entry>
   <entry key="tag.base.summary">Parametry tagu</entry>
+  <entry key="tag.base.summary.tag">Parametry tagu</entry>
+  <entry key="tag.base.summary.puzzle">Parametry puzzla</entry>
   <entry key="tag.shape">Ksztalt</entry>
   <entry key="tag.shape.rounded">Zaokraglony prostokat</entry>
   <entry key="tag.shape.capsule">Kapsula</entry>
@@ -27,13 +29,15 @@
   <entry key="tag.cornerRadius">Promien rogu (mm)</entry>
   <entry key="tag.holeDiameter">Srednica otworu (mm)</entry>
   <entry key="tag.holeMargin">Margines otworu (mm)</entry>
+  <entry key="tag.holeOffsetX">Przesuniecie otworu X (mm)</entry>
+  <entry key="tag.holeOffsetY">Przesuniecie otworu Y (mm)</entry>
   <entry key="tag.front.summary">Awers (gora)</entry>
   <entry key="tag.front.text">Napis</entry>
   <entry key="tag.text.placeholder">Wpisz kilka linii tekstu</entry>
   <entry key="tag.front.textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</entry>
   <entry key="tag.front.fontSize">Rozmiar tekstu awersu (mm)</entry>
-  <entry key="tag.front.logoEnabled">Dodaj logo SVG</entry>
-  <entry key="tag.front.logoFile">Plik logo (SVG)</entry>
+  <entry key="tag.front.logoEnabled">Dodaj logo SVG/PNG</entry>
+  <entry key="tag.front.logoFile">Plik logo (SVG lub PNG)</entry>
   <entry key="tag.front.logoSize">Rozmiar logo (mm)</entry>
   <entry key="tag.front.logoDepth">Glebokosc logo (mm, ujemna = wklesle)</entry>
   <entry key="tag.front.logoOffsetX">Przesuniecie logo X (mm)</entry>
@@ -43,8 +47,8 @@
   <entry key="tag.back.text">Napis</entry>
   <entry key="tag.back.textDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</entry>
   <entry key="tag.back.fontSize">Rozmiar tekstu rewersu (mm)</entry>
-  <entry key="tag.back.logoEnabled">Dodaj logo SVG</entry>
-  <entry key="tag.back.logoFile">Plik logo (SVG)</entry>
+  <entry key="tag.back.logoEnabled">Dodaj logo SVG/PNG</entry>
+  <entry key="tag.back.logoFile">Plik logo (SVG lub PNG)</entry>
   <entry key="tag.back.logoSize">Rozmiar logo (mm)</entry>
   <entry key="tag.back.logoDepth">Glebokosc logo (mm, ujemna = wklesle)</entry>
   <entry key="tag.back.logoOffsetX">Przesuniecie logo X (mm)</entry>
@@ -53,7 +57,8 @@
   <entry key="dice.size">Rozmiar kostki (mm)</entry>
   <entry key="dice.roundness">Okraglosc krawedzi (mm)</entry>
   <entry key="dice.sphereRadius">Promien kuli podgladu (mm)</entry>
-  <entry key="dice.preview.summary">Podglad tymczasowy</entry>
+  <entry key="dice.params.summary">Parametry kosci</entry>
+  <entry key="dice.preview.summary">Zaawansowane</entry>
   <entry key="dice.preview.showCube">Widoczny szescian</entry>
   <entry key="dice.preview.showText">Widoczny tekst</entry>
   <entry key="dice.preview.showSphere">Widoczna kula ograniczajaca</entry>
@@ -74,8 +79,8 @@
   <entry key="dice.face.textEnabled">Wlacz tekst</entry>
   <entry key="dice.face.depth">Glebokosc tekstu (mm)</entry>
   <entry key="dice.face.fontSize">Rozmiar czcionki (mm)</entry>
-  <entry key="dice.face.logoEnabled">Wlacz grafike SVG</entry>
-  <entry key="dice.face.logoFile">Plik logo SVG</entry>
+  <entry key="dice.face.logoEnabled">Wlacz grafike SVG/PNG</entry>
+  <entry key="dice.face.logoFile">Plik logo SVG/PNG</entry>
   <entry key="dice.face.logoSize">Rozmiar logo (mm)</entry>
   <entry key="dice.face.logoDepth">Glebokosc logo (mm)</entry>
   <entry key="actions.reset">Reset</entry>
@@ -99,13 +104,13 @@
   <entry key="status.font.loadingCustom">Ladowanie: {name}</entry>
   <entry key="status.font.customLoaded">Wlasny font zaladowany: {name}</entry>
   <entry key="status.font.invalid">Niepoprawny plik fontu. Uzyj .ttf lub typeface.json.</entry>
-  <entry key="status.logo.front.select">Wybierz plik SVG dla awersu.</entry>
-  <entry key="status.logo.back.select">Wybierz plik SVG dla rewersu.</entry>
+  <entry key="status.logo.front.select">Wybierz plik SVG lub PNG dla awersu.</entry>
+  <entry key="status.logo.back.select">Wybierz plik SVG lub PNG dla rewersu.</entry>
   <entry key="status.logo.loading">Ladowanie logo: {name}</entry>
   <entry key="status.logo.loaded">Logo zaladowane: {name}</entry>
-  <entry key="status.logo.invalid">Niepoprawny plik SVG albo brak sciezek wektorowych.</entry>
-  <entry key="status.logo.invalidShort">Niepoprawny plik SVG.</entry>
-  <entry key="status.dice.logo.empty">SVG: brak</entry>
+  <entry key="status.logo.invalid">Niepoprawny plik SVG/PNG albo brak czytelnego konturu.</entry>
+  <entry key="status.logo.invalidShort">Niepoprawny plik SVG/PNG.</entry>
+  <entry key="status.dice.logo.empty">Logo: brak</entry>
   <entry key="status.dice.logo.removed">SVG usuniete po uproszczeniu (zbyt malo danych).</entry>
   <entry key="status.dice.logo.simplified">SVG uproszczone: {before} -&gt; {after} pkt</entry>
   <entry key="status.dice.logo.tooComplex">SVG jest zbyt zlozony. Wlacz auto-upraszczanie lub kliknij „Uprosc zaladowane SVG”.</entry>

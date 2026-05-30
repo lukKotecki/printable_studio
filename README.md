@@ -17,7 +17,7 @@ Demo online: https://studio.mojestrony.pl
 - Konfiguracja geometrii: ksztalt, rozmiar, grubosc, promien rogow
 - Otwor na kolko z regulacja srednicy i marginesu (dla tagu)
 - Napis 3D: tekst, rozmiar i glebokosc (wypukly lub wklesly)
-- Logo SVG na awersie/rewersie i na scianach kostki
+- Logo SVG/PNG na awersie/rewersie i na scianach kostki (biale tlo ignorowane, czarny ksztalt jako kontur)
 - Przesuniecie i obrot logo SVG na awersie/rewersie
 - Obsluga fontow lokalnych: wbudowane typeface.json oraz wlasne .ttf
 - Interfejs dwujezyczny (PL/EN) z lokalizacjami XML

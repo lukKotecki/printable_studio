@@ -320,6 +320,20 @@ button.primary:hover {
   padding: 0.85rem;
 }
 
+.advanced-presets {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--line);
+}
+
+.advanced-presets h3 {
+  margin: 0 0 0.65rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .preset-card > summary {
   cursor: pointer;
   margin: 0 0 0.6rem;
