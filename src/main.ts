@@ -8,234 +8,50 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { CSG } from 'three-csg-ts'
-
-type ModelType = 'tag' | 'dice' | 'puzzle'
-type TagShape = 'rounded' | 'capsule' | 'circle' | 'puzzle'
-type LanguageCode = 'pl' | 'en'
-type FontChoice =
-  | 'helvetiker'
-  | 'optimer'
-  | 'gentilis'
-  | 'droidSans'
-  | 'droidSerif'
-  | 'notoSansPl'
-  | 'notoSerifPl'
-  | 'custom'
-
-interface TagConfig {
-  modelType: ModelType
-  text: string
-  backText: string
-  shape: TagShape
-  width: number
-  height: number
-  thickness: number
-  cornerRadius: number
-  holeDiameter: number
-  holeMargin: number
-  holeOffsetX: number
-  holeOffsetY: number
-  fontSize: number
-  backFontSize: number
-  textDepth: number
-  backTextDepth: number
-  diceSize: number
-  diceRoundness: number
-  diceSphereRadius: number
-  diceClipWithSphere: boolean
-  diceShowCube: boolean
-  diceShowText: boolean
-  diceShowSphere: boolean
-  diceFace1: string
-  diceFace2: string
-  diceFace3: string
-  diceFace4: string
-  diceFace5: string
-  diceFace6: string
-  diceFaceTextEnabled1: boolean
-  diceFaceTextEnabled2: boolean
-  diceFaceTextEnabled3: boolean
-  diceFaceTextEnabled4: boolean
-  diceFaceTextEnabled5: boolean
-  diceFaceTextEnabled6: boolean
-  diceFaceLogoEnabled1: boolean
-  diceFaceLogoEnabled2: boolean
-  diceFaceLogoEnabled3: boolean
-  diceFaceLogoEnabled4: boolean
-  diceFaceLogoEnabled5: boolean
-  diceFaceLogoEnabled6: boolean
-  diceFaceDepth1: number
-  diceFaceDepth2: number
-  diceFaceDepth3: number
-  diceFaceDepth4: number
-  diceFaceDepth5: number
-  diceFaceDepth6: number
-  diceFaceFontSize1: number
-  diceFaceFontSize2: number
-  diceFaceFontSize3: number
-  diceFaceFontSize4: number
-  diceFaceFontSize5: number
-  diceFaceFontSize6: number
-  diceFaceLogoSize1: number
-  diceFaceLogoSize2: number
-  diceFaceLogoSize3: number
-  diceFaceLogoSize4: number
-  diceFaceLogoSize5: number
-  diceFaceLogoSize6: number
-  diceFaceLogoDepth1: number
-  diceFaceLogoDepth2: number
-  diceFaceLogoDepth3: number
-  diceFaceLogoDepth4: number
-  diceFaceLogoDepth5: number
-  diceFaceLogoDepth6: number
-  logoEnabled: boolean
-  logoSize: number
-  logoDepth: number
-  logoOffsetX: number
-  logoOffsetY: number
-  logoRotation: number
-  backLogoEnabled: boolean
-  backLogoSize: number
-  backLogoDepth: number
-  backLogoOffsetX: number
-  backLogoOffsetY: number
-  backLogoRotation: number
-}
-
-const maxTextLines = 4
-const maxCharsPerLine = 18
-const textLineSpacingFactor = 1.2
-
-const defaultConfig: TagConfig = {
-  modelType: 'tag',
-  text: 'LUNA',
-  backText: '',
-  shape: 'rounded',
-  width: 62,
-  height: 28,
-  thickness: 3,
-  cornerRadius: 5,
-  holeDiameter: 5,
-  holeMargin: 6,
-  holeOffsetX: 0,
-  holeOffsetY: 0,
-  fontSize: 9,
-  textDepth: 1,
-  backTextDepth: 1,
-  backFontSize: 9,
-  diceSize: 20,
-  diceRoundness: 2,
-  diceSphereRadius: 13.3,
-  diceClipWithSphere: false,
-  diceShowCube: true,
-  diceShowText: true,
-  diceShowSphere: false,
-  diceFace1: '1',
-  diceFace2: '2',
-  diceFace3: '3',
-  diceFace4: '4',
-  diceFace5: '5',
-  diceFace6: '6',
-  diceFaceTextEnabled1: true,
-  diceFaceTextEnabled2: true,
-  diceFaceTextEnabled3: true,
-  diceFaceTextEnabled4: true,
-  diceFaceTextEnabled5: true,
-  diceFaceTextEnabled6: true,
-  diceFaceLogoEnabled1: false,
-  diceFaceLogoEnabled2: false,
-  diceFaceLogoEnabled3: false,
-  diceFaceLogoEnabled4: false,
-  diceFaceLogoEnabled5: false,
-  diceFaceLogoEnabled6: false,
-  diceFaceDepth1: -1,
-  diceFaceDepth2: -1,
-  diceFaceDepth3: -1,
-  diceFaceDepth4: -1,
-  diceFaceDepth5: -1,
-  diceFaceDepth6: -1,
-  diceFaceFontSize1: 8,
-  diceFaceFontSize2: 8,
-  diceFaceFontSize3: 8,
-  diceFaceFontSize4: 8,
-  diceFaceFontSize5: 8,
-  diceFaceFontSize6: 8,
-  diceFaceLogoSize1: 6,
-  diceFaceLogoSize2: 6,
-  diceFaceLogoSize3: 6,
-  diceFaceLogoSize4: 6,
-  diceFaceLogoSize5: 6,
-  diceFaceLogoSize6: 6,
-  diceFaceLogoDepth1: 0.8,
-  diceFaceLogoDepth2: 0.8,
-  diceFaceLogoDepth3: 0.8,
-  diceFaceLogoDepth4: 0.8,
-  diceFaceLogoDepth5: 0.8,
-  diceFaceLogoDepth6: 0.8,
-  logoEnabled: false,
-  logoSize: 8,
-  logoDepth: 0.8,
-  logoOffsetX: 0,
-  logoOffsetY: 0,
-  logoRotation: 0,
-  backLogoEnabled: false,
-  backLogoSize: 8,
-  backLogoDepth: 0.8,
-  backLogoOffsetX: 0,
-  backLogoOffsetY: 0,
-  backLogoRotation: 0,
-}
-
-const presetsStorageKey = 'printable-studio-presets-v1'
-const lastStateStorageKey = 'printable-studio-last-state-v1'
-const panelWidthStorageKey = 'printable-studio-panel-width-v1'
-const languageStorageKey = 'printable-studio-language-v1'
-const defaultFontChoice: Exclude<FontChoice, 'custom'> = 'helvetiker'
-const defaultLanguage: LanguageCode = 'pl'
-
-interface PersistedAppState {
-  config: TagConfig
-  fontChoice: Exclude<FontChoice, 'custom'>
-}
-
-const builtinFontUrls: Record<Exclude<FontChoice, 'custom'>, string> = {
-  helvetiker: '/fonts/helvetiker_regular.typeface.json',
-  optimer: '/fonts/optimer_regular.typeface.json',
-  gentilis: '/fonts/gentilis_regular.typeface.json',
-  droidSans: '/fonts/droid/droid_sans_regular.typeface.json',
-  droidSerif: '/fonts/droid/droid_serif_regular.typeface.json',
-  notoSansPl: '/fonts/pl/noto_sans_regular.typeface.json',
-  notoSerifPl: '/fonts/pl/noto_serif_regular.typeface.json',
-}
-
-const polishGlyphFallback: Record<string, string> = {
-  '\u0105': 'a',
-  '\u0107': 'c',
-  '\u0119': 'e',
-  '\u0142': 'l',
-  '\u0144': 'n',
-  '\u00f3': 'o',
-  '\u015b': 's',
-  '\u017a': 'z',
-  '\u017c': 'z',
-  '\u0104': 'A',
-  '\u0106': 'C',
-  '\u0118': 'E',
-  '\u0141': 'L',
-  '\u0143': 'N',
-  '\u00d3': 'O',
-  '\u015a': 'S',
-  '\u0179': 'Z',
-  '\u017b': 'Z',
-}
-
-function requiredElement<T extends Element>(selector: string): T {
-  const element = document.querySelector<T>(selector)
-  if (!element) {
-    throw new Error(`Missing element: ${selector}`)
-  }
-  return element
-}
+import {
+  builtinFontUrls,
+  defaultConfig,
+  defaultFontChoice,
+  defaultLanguage,
+  languageStorageKey,
+  lastStateStorageKey,
+  maxCharsPerLine,
+  maxTextLines,
+  panelWidthStorageKey,
+  polishGlyphFallback,
+  presetsStorageKey,
+  textLineSpacingFactor,
+  type FontChoice,
+  type LanguageCode,
+  type ModelType,
+  type TagShape,
+  type PersistedAppState,
+  type TagConfig,
+} from './config/app-config'
+import { isDiceSubtractResultStable } from './models/dice-analysis'
+import {
+  createBaseMesh as createTagPuzzleBaseMesh,
+  createBaseShape as createTagPuzzleBaseShape,
+} from './models/tag-puzzle'
+import {
+  loadLocale as loadLocaleXml,
+  setAttr as setTranslatedAttr,
+  setNthText as setTranslatedNthText,
+  setText as setTranslatedText,
+  translate,
+} from './i18n/locale'
+import {
+  readLastState as readLastStateFromStorage,
+  readPanelWidth as readPanelWidthFromStorage,
+  readPresets as readPresetsFromStorage,
+  readSavedLanguage as readSavedLanguageFromStorage,
+  saveLanguage as saveLanguageToStorage,
+  saveLastState as saveLastStateToStorage,
+  savePanelWidth as savePanelWidthToStorage,
+  writePresets as writePresetsToStorage,
+} from './storage/local-storage'
+import { attachDiceFaceToggleHandlers, attachRebuildListeners } from './ui/events'
+import { requiredElement } from './utils/dom'
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (!app) {
@@ -243,6 +59,7 @@ if (!app) {
 }
 
 app.innerHTML = `
+
   <main class="layout">
     <aside class="panel">
       <div class="panel-header">
@@ -865,9 +682,11 @@ app.innerHTML = `
       </div>
     </section>
   </main>
+
 `
 
 const canvas = requiredElement<HTMLCanvasElement>('#viewer')
+
 
 const controlsMap = {
   panel: requiredElement<HTMLElement>('.panel'),
@@ -1032,73 +851,32 @@ const diceFaceLogoStatusState: Record<number, StatusState> = {
   6: { key: 'status.dice.logo.empty', isError: false },
 }
 
-function interpolateTemplate(template: string, vars: Record<string, string | number> = {}): string {
-  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? `{${key}}`))
-}
-
 function t(key: string, vars: Record<string, string | number> = {}, fallback?: string): string {
-  return interpolateTemplate(translations[key] ?? fallback ?? key, vars)
+  return translate(translations, key, vars, fallback)
 }
 
 function readSavedLanguage(): LanguageCode {
-  try {
-    const raw = localStorage.getItem(languageStorageKey)
-    return raw === 'en' ? 'en' : defaultLanguage
-  } catch {
-    return defaultLanguage
-  }
+  return readSavedLanguageFromStorage(languageStorageKey, defaultLanguage)
 }
 
 function saveLanguage(language: LanguageCode): void {
-  localStorage.setItem(languageStorageKey, language)
+  saveLanguageToStorage(languageStorageKey, language)
 }
 
 async function loadLocale(language: LanguageCode): Promise<Record<string, string>> {
-  const cached = localeCache[language]
-  if (cached) {
-    return cached
-  }
-
-  const response = await fetch(`/locales/${language}.xml`)
-  if (!response.ok) {
-    throw new Error(`Failed to load locale: ${language}`)
-  }
-
-  const xmlText = await response.text()
-  const xml = new DOMParser().parseFromString(xmlText, 'application/xml')
-  const parsed: Record<string, string> = {}
-
-  xml.querySelectorAll('entry[key]').forEach((entry) => {
-    const key = entry.getAttribute('key')
-    if (!key) {
-      return
-    }
-    parsed[key] = entry.textContent?.trim() ?? ''
-  })
-
-  localeCache[language] = parsed
-  return parsed
+  return loadLocaleXml(language, localeCache)
 }
 
 function setText(selector: string, key: string, fallback: string): void {
-  const element = document.querySelector<HTMLElement>(selector)
-  if (element) {
-    element.textContent = t(key, {}, fallback)
-  }
+  setTranslatedText(selector, key, fallback, t)
 }
 
 function setNthText(selector: string, index: number, key: string, fallback: string): void {
-  const element = document.querySelectorAll<HTMLElement>(selector)[index]
-  if (element) {
-    element.textContent = t(key, {}, fallback)
-  }
+  setTranslatedNthText(selector, index, key, fallback, t)
 }
 
 function setAttr(selector: string, attribute: string, key: string, fallback: string): void {
-  const element = document.querySelector<HTMLElement>(selector)
-  if (element) {
-    element.setAttribute(attribute, t(key, {}, fallback))
-  }
+  setTranslatedAttr(selector, attribute, key, fallback, t)
 }
 
 function updateTagBasePanelSummary(): void {
@@ -1644,23 +1422,11 @@ function applyPanelWidth(width: number): void {
 }
 
 function readPanelWidth(): number | null {
-  try {
-    const raw = localStorage.getItem(panelWidthStorageKey)
-    if (!raw) {
-      return null
-    }
-    const parsed = Number(raw)
-    if (!Number.isFinite(parsed)) {
-      return null
-    }
-    return clamp(parsed, 300, 760)
-  } catch {
-    return null
-  }
+  return readPanelWidthFromStorage(panelWidthStorageKey, clamp)
 }
 
 function savePanelWidth(width: number): void {
-  localStorage.setItem(panelWidthStorageKey, String(Math.round(clamp(width, 300, 760))))
+  savePanelWidthToStorage(panelWidthStorageKey, width, clamp)
 }
 
 function wirePanelResize(): void {
@@ -3064,150 +2830,12 @@ function applyConfigToForm(config: TagConfig): void {
   updateBackLogoControlsVisibility()
 }
 
-function roundedRectShape(width: number, height: number, radius: number): THREE.Shape {
-  const hw = width / 2
-  const hh = height / 2
-  const r = clamp(radius, 0, Math.min(hw, hh))
-  const shape = new THREE.Shape()
-  shape.moveTo(-hw + r, -hh)
-  shape.lineTo(hw - r, -hh)
-  shape.quadraticCurveTo(hw, -hh, hw, -hh + r)
-  shape.lineTo(hw, hh - r)
-  shape.quadraticCurveTo(hw, hh, hw - r, hh)
-  shape.lineTo(-hw + r, hh)
-  shape.quadraticCurveTo(-hw, hh, -hw, hh - r)
-  shape.lineTo(-hw, -hh + r)
-  shape.quadraticCurveTo(-hw, -hh, -hw + r, -hh)
-  return shape
-}
-
-function createPuzzlePieceShape(width: number, height: number): THREE.Shape {
-  const size = Math.min(width, height)
-  const halfSize = size / 2
-  const toothSize = 5
-  const toothDepth = 5
-  const segmentCount = Math.max(1, Math.floor(size / toothSize))
-  const coveredSpan = segmentCount * toothSize
-  const edgeMargin = (size - coveredSpan) / 2
-  const points: THREE.Vector2[] = []
-  const isToothSegment = (index: number): boolean => index % 2 === 1
-
-  const pushPoint = (x: number, y: number): void => {
-    const lastPoint = points.at(-1)
-    if (!lastPoint || Math.abs(lastPoint.x - x) > 0.0001 || Math.abs(lastPoint.y - y) > 0.0001) {
-      points.push(new THREE.Vector2(x, y))
-    }
-  }
-
-  pushPoint(-halfSize, -halfSize)
-  pushPoint(-halfSize + edgeMargin, -halfSize)
-
-  for (let i = 0; i < segmentCount; i += 1) {
-    const x1 = -halfSize + edgeMargin + i * toothSize
-    const x2 = x1 + toothSize
-    const y = -halfSize + (isToothSegment(i) ? -toothDepth : 0)
-    pushPoint(x1, y)
-    pushPoint(x2, y)
-    pushPoint(x2, -halfSize)
-  }
-  pushPoint(halfSize, -halfSize)
-  pushPoint(halfSize, -halfSize + edgeMargin)
-
-  for (let i = 0; i < segmentCount; i += 1) {
-    const y1 = -halfSize + edgeMargin + i * toothSize
-    const y2 = y1 + toothSize
-    const x = halfSize + (isToothSegment(i) ? toothDepth : 0)
-    pushPoint(x, y1)
-    pushPoint(x, y2)
-    pushPoint(halfSize, y2)
-  }
-  pushPoint(halfSize, halfSize)
-  pushPoint(halfSize - edgeMargin, halfSize)
-
-  for (let i = 0; i < segmentCount; i += 1) {
-    const x1 = halfSize - edgeMargin - i * toothSize
-    const x2 = x1 - toothSize
-    const y = halfSize + (isToothSegment(i) ? -toothDepth : 0)
-    pushPoint(x1, y)
-    pushPoint(x2, y)
-    pushPoint(x2, halfSize)
-  }
-  pushPoint(-halfSize, halfSize)
-  pushPoint(-halfSize, halfSize - edgeMargin)
-
-  for (let i = 0; i < segmentCount; i += 1) {
-    const y1 = halfSize - edgeMargin - i * toothSize
-    const y2 = y1 - toothSize
-    const x = -halfSize + (isToothSegment(i) ? toothDepth : 0)
-    pushPoint(x, y1)
-    pushPoint(x, y2)
-    pushPoint(-halfSize, y2)
-  }
-  pushPoint(-halfSize, -halfSize)
-
-  return shapeFromPoints(points)
-}
-
 function createBaseShape(config: TagConfig): THREE.Shape {
-  const halfWidth = config.width / 2
-  const halfHeight = config.height / 2
-
-  let shape: THREE.Shape
-  if (config.shape === 'circle') {
-    shape = new THREE.Shape()
-    shape.absarc(0, 0, halfWidth, 0, Math.PI * 2, false)
-  } else if (config.shape === 'puzzle') {
-    shape = createPuzzlePieceShape(config.width, config.height)
-  } else {
-    const radius = config.shape === 'capsule' ? config.height / 2 : config.cornerRadius
-    shape = roundedRectShape(config.width, config.height, radius)
-  }
-
-  if (config.shape === 'puzzle') {
-    return shape
-  }
-
-  const holeRadius = config.holeDiameter / 2
-  const edgePadding = 0.7
-  const requestedHoleX = -halfWidth + holeRadius + config.holeMargin + config.holeOffsetX
-  const requestedHoleY = config.holeOffsetY
-  let holeX = requestedHoleX
-  let holeY = requestedHoleY
-
-  if (config.shape === 'circle') {
-    const maxDistance = Math.max(0, halfWidth - holeRadius - edgePadding)
-    const currentDistance = Math.hypot(requestedHoleX, requestedHoleY)
-    if (currentDistance > maxDistance && currentDistance > 0.0001) {
-      const factor = maxDistance / currentDistance
-      holeX = requestedHoleX * factor
-      holeY = requestedHoleY * factor
-    }
-  } else {
-    const minHoleX = -halfWidth + holeRadius + edgePadding
-    const maxHoleX = halfWidth - holeRadius - edgePadding
-    const minHoleY = -halfHeight + holeRadius + edgePadding
-    const maxHoleY = halfHeight - holeRadius - edgePadding
-    holeX = clamp(requestedHoleX, minHoleX, maxHoleX)
-    holeY = clamp(requestedHoleY, minHoleY, maxHoleY)
-  }
-
-  const holePath = new THREE.Path()
-  holePath.absarc(holeX, holeY, holeRadius, 0, Math.PI * 2, true)
-  shape.holes.push(holePath)
-
-  return shape
+  return createTagPuzzleBaseShape(config, { clamp, shapeFromPoints })
 }
 
 function createBaseMesh(config: TagConfig): THREE.Mesh {
-  const shape = createBaseShape(config)
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: config.thickness,
-    bevelEnabled: false,
-    curveSegments: 40,
-  })
-
-  geometry.computeVertexNormals()
-  return new THREE.Mesh(geometry, baseMaterial)
+  return createTagPuzzleBaseMesh(config, baseMaterial, { clamp, shapeFromPoints })
 }
 
 function createCenteredTextGeometry(text: string, fontSize: number, depth: number): TextGeometry | null {
@@ -3282,96 +2910,6 @@ function applySphereClippingToDice(
     baseMesh: clippedBaseMesh,
     embossMeshes,
   }
-}
-
-function computeGeometryVolume(geometry: THREE.BufferGeometry): number {
-  const position = geometry.getAttribute('position')
-  if (!position || position.count < 3) {
-    return 0
-  }
-
-  const index = geometry.getIndex()
-  let volume = 0
-
-  const addTriangleVolume = (aIndex: number, bIndex: number, cIndex: number): void => {
-    const ax = position.getX(aIndex)
-    const ay = position.getY(aIndex)
-    const az = position.getZ(aIndex)
-    const bx = position.getX(bIndex)
-    const by = position.getY(bIndex)
-    const bz = position.getZ(bIndex)
-    const cx = position.getX(cIndex)
-    const cy = position.getY(cIndex)
-    const cz = position.getZ(cIndex)
-
-    volume += (ax * by * cz - ax * bz * cy - ay * bx * cz + ay * bz * cx + az * bx * cy - az * by * cx) / 6
-  }
-
-  if (index) {
-    for (let i = 0; i < index.count; i += 3) {
-      addTriangleVolume(index.getX(i), index.getX(i + 1), index.getX(i + 2))
-    }
-  } else {
-    for (let i = 0; i < position.count; i += 3) {
-      addTriangleVolume(i, i + 1, i + 2)
-    }
-  }
-
-  return Math.abs(volume)
-}
-
-function isFiniteGeometry(geometry: THREE.BufferGeometry): boolean {
-  const position = geometry.getAttribute('position')
-  if (!position || position.count < 3) {
-    return false
-  }
-
-  for (let i = 0; i < position.count; i += 1) {
-    const x = position.getX(i)
-    const y = position.getY(i)
-    const z = position.getZ(i)
-    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
-      return false
-    }
-  }
-
-  geometry.computeBoundingBox()
-  const box = geometry.boundingBox
-  if (!box) {
-    return false
-  }
-
-  const size = new THREE.Vector3()
-  box.getSize(size)
-  return Number.isFinite(size.x) && Number.isFinite(size.y) && Number.isFinite(size.z)
-}
-
-function isDiceSubtractResultStable(previousMesh: THREE.Mesh, candidateMesh: THREE.Mesh, diceSize: number): boolean {
-  if (!isFiniteGeometry(candidateMesh.geometry)) {
-    return false
-  }
-
-  candidateMesh.geometry.computeBoundingBox()
-  const box = candidateMesh.geometry.boundingBox
-  if (!box) {
-    return false
-  }
-
-  const boxSize = new THREE.Vector3()
-  box.getSize(boxSize)
-  const minExpectedSpan = diceSize * 0.55
-  if (boxSize.x < minExpectedSpan || boxSize.y < minExpectedSpan || boxSize.z < minExpectedSpan) {
-    return false
-  }
-
-  const previousVolume = computeGeometryVolume(previousMesh.geometry)
-  if (previousVolume <= 0.0001) {
-    return false
-  }
-
-  const candidateVolume = computeGeometryVolume(candidateMesh.geometry)
-  const volumeRatio = candidateVolume / previousVolume
-  return Number.isFinite(volumeRatio) && volumeRatio > 0.65 && volumeRatio < 1.001
 }
 
 function createDiceObject(config: TagConfig): THREE.Object3D {
@@ -3954,47 +3492,29 @@ function downloadStl(): void {
 }
 
 function readPresets(): Record<string, TagConfig> {
-  try {
-    const raw = localStorage.getItem(presetsStorageKey)
-    if (!raw) {
-      return {}
-    }
-    const parsed = JSON.parse(raw) as Record<string, TagConfig>
-    return parsed || {}
-  } catch {
-    return {}
-  }
+  return readPresetsFromStorage(presetsStorageKey)
 }
 
 function writePresets(presets: Record<string, TagConfig>): void {
-  localStorage.setItem(presetsStorageKey, JSON.stringify(presets))
+  writePresetsToStorage(presetsStorageKey, presets)
 }
 
 function readLastState(): PersistedAppState | null {
-  try {
-    const raw = localStorage.getItem(lastStateStorageKey)
-    if (!raw) {
-      return null
-    }
-
-    const parsed = JSON.parse(raw) as Partial<PersistedAppState>
-    if (!parsed || typeof parsed !== 'object' || !parsed.config) {
-      return null
-    }
-
-    const mergedConfig = { ...defaultConfig, ...parsed.config }
-    const parsedFontChoice = parsed.fontChoice as FontChoice | undefined
-    const fontChoice =
-      parsedFontChoice && isBuiltinFontChoice(parsedFontChoice)
-        ? parsedFontChoice
-        : defaultFontChoice
-
-    return {
-      config: mergedConfig,
-      fontChoice,
-    }
-  } catch {
+  const parsed = readLastStateFromStorage(lastStateStorageKey)
+  if (!parsed) {
     return null
+  }
+
+  const mergedConfig = { ...defaultConfig, ...parsed.config }
+  const parsedFontChoice = parsed.fontChoice as FontChoice | undefined
+  const fontChoice =
+    parsedFontChoice && isBuiltinFontChoice(parsedFontChoice)
+      ? parsedFontChoice
+      : defaultFontChoice
+
+  return {
+    config: mergedConfig,
+    fontChoice,
   }
 }
 
@@ -4005,7 +3525,7 @@ function saveLastState(): void {
     config: getConfigFromForm(),
     fontChoice,
   }
-  localStorage.setItem(lastStateStorageKey, JSON.stringify(payload))
+  saveLastStateToStorage(lastStateStorageKey, payload)
 }
 
 function normalizeConfigForModel(config: TagConfig, modelType: 'tag' | 'puzzle'): TagConfig {
@@ -4167,8 +3687,7 @@ function wireEvents(): void {
     }, rebuildDelay)
   }
 
-  updateInputs.forEach((el) => el.addEventListener('input', () => queueRebuild('input')))
-  updateInputs.forEach((el) => el.addEventListener('change', () => queueRebuild('change')))
+  attachRebuildListeners(updateInputs, queueRebuild)
 
   controlsMap.modelType.addEventListener('change', () => {
     const nextModelType = controlsMap.modelType.value as ModelType
@@ -4197,55 +3716,26 @@ function wireEvents(): void {
     syncPuzzleDimensionsInForm()
   })
 
-  controlsMap.diceFaceTextEnabled1.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(1)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceTextEnabled2.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(2)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceTextEnabled3.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(3)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceTextEnabled4.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(4)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceTextEnabled5.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(5)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceTextEnabled6.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(6)
-    queueRebuild('change')
-  })
-
-  controlsMap.diceFaceLogoEnabled1.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(1)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceLogoEnabled2.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(2)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceLogoEnabled3.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(3)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceLogoEnabled4.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(4)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceLogoEnabled5.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(5)
-    queueRebuild('change')
-  })
-  controlsMap.diceFaceLogoEnabled6.addEventListener('change', () => {
-    updateDiceFaceOptionVisibility(6)
-    queueRebuild('change')
-  })
+  attachDiceFaceToggleHandlers(
+    [
+      controlsMap.diceFaceTextEnabled1,
+      controlsMap.diceFaceTextEnabled2,
+      controlsMap.diceFaceTextEnabled3,
+      controlsMap.diceFaceTextEnabled4,
+      controlsMap.diceFaceTextEnabled5,
+      controlsMap.diceFaceTextEnabled6,
+    ],
+    [
+      controlsMap.diceFaceLogoEnabled1,
+      controlsMap.diceFaceLogoEnabled2,
+      controlsMap.diceFaceLogoEnabled3,
+      controlsMap.diceFaceLogoEnabled4,
+      controlsMap.diceFaceLogoEnabled5,
+      controlsMap.diceFaceLogoEnabled6,
+    ],
+    updateDiceFaceOptionVisibility,
+    queueRebuild,
+  )
 
   controlsMap.logoEnabled.addEventListener('change', () => {
     updateLogoControlsVisibility()
@@ -4446,4 +3936,5 @@ async function start(): Promise<void> {
 }
 
 void start()
+
 
