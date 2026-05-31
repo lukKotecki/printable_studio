@@ -1,3 +1,4 @@
+
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -80,8 +81,8 @@ app.innerHTML = `
         <label for="modelType">Typ modelu</label>
         <select id="modelType">
           <option value="tag">Plaski tag</option>
-          <option value="puzzle">Puzzle</option>
-          <option value="dice">Kostka (kosc do gry)</option>
+          <option value="puzzle">Puzzle (beta)</option>
+          <option value="dice">Kostka K6 (beta)</option>
         </select>
       </div>
 
@@ -922,8 +923,8 @@ function applyStaticTranslations(): void {
   setText('.subtitle', 'app.subtitle', 'Lokalny generator tagow 3D z eksportem STL.')
   setText('label[for="modelType"]', 'form.modelType', 'Typ modelu')
   setText('#modelType option[value="tag"]', 'model.tag', 'Plaski tag')
-  setText('#modelType option[value="puzzle"]', 'model.puzzle', 'Puzzle')
-  setText('#modelType option[value="dice"]', 'model.dice', 'Kostka (kosc do gry)')
+  setText('#modelType option[value="puzzle"]', 'model.puzzle', 'Puzzle (beta)')
+  setText('#modelType option[value="dice"]', 'model.dice', 'Kostka K6 (beta)')
   setText('label[for="fontChoice"]', 'form.font', 'Font')
   setText('#fontChoice option[value="helvetiker"]', 'font.helvetiker', 'Helvetiker (domyslny)')
   setText('#fontChoice option[value="notoSansPl"]', 'font.notoSansPl', 'Noto Sans (PL)')
@@ -1065,6 +1066,34 @@ camera.lookAt(0, 0, 0)
 
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
+
+const phoneTouchMedia = window.matchMedia('(max-width: 980px) and (pointer: coarse)')
+
+function applyTouchInteractionMode(): void {
+  const isPhoneTouch = phoneTouchMedia.matches
+
+  // Keep classic mouse mapping regardless of screen size.
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY
+  controls.mouseButtons.RIGHT = THREE.MOUSE.PAN
+
+  if (isPhoneTouch) {
+    // One finger is reserved for page scroll; rotation requires two fingers.
+    controls.touches.ONE = THREE.TOUCH.PAN
+    controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE
+    controls.enablePan = false
+    canvas.style.touchAction = 'pan-y'
+    return
+  }
+
+  controls.touches.ONE = THREE.TOUCH.ROTATE
+  controls.touches.TWO = THREE.TOUCH.DOLLY_PAN
+  controls.enablePan = true
+  canvas.style.touchAction = 'none'
+}
+
+applyTouchInteractionMode()
+phoneTouchMedia.addEventListener('change', applyTouchInteractionMode)
 
 const hemi = new THREE.HemisphereLight('#fff7e8', '#5e5d5b', 1)
 scene.add(hemi)
@@ -3413,12 +3442,9 @@ function rebuildTag(): void {
 }
 
 function resizeRenderer(): void {
-  const wrapper = canvas.parentElement
-  if (!wrapper) {
-    return
-  }
-  const width = wrapper.clientWidth
-  const height = wrapper.clientHeight
+  const canvasBounds = canvas.getBoundingClientRect()
+  const width = Math.max(1, Math.round(canvasBounds.width))
+  const height = Math.max(1, Math.round(canvasBounds.height))
   renderer.setSize(width, height, false)
   camera.aspect = width / height
   camera.updateProjectionMatrix()
@@ -3429,6 +3455,12 @@ function animate(): void {
   renderer.render(scene, camera)
   requestAnimationFrame(animate)
 }
+
+const canvasResizeObserver = new ResizeObserver(() => {
+  resizeRenderer()
+})
+
+canvasResizeObserver.observe(canvas)
 
 function downloadStl(): void {
   if (!activeTagObject) {

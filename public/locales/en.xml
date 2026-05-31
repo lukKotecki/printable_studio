@@ -3,8 +3,8 @@
   <entry key="language.aria">Language</entry>
   <entry key="form.modelType">Model type</entry>
   <entry key="model.tag">Flat tag</entry>
-  <entry key="model.puzzle">Puzzle</entry>
-  <entry key="model.dice">Dice</entry>
+  <entry key="model.puzzle">Puzzle (beta)</entry>
+  <entry key="model.dice">D6 Dice (beta)</entry>
   <entry key="form.font">Font</entry>
   <entry key="font.helvetiker">Helvetiker (default)</entry>
   <entry key="font.notoSansPl">Noto Sans (PL)</entry>
