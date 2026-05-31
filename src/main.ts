@@ -324,21 +324,6 @@ app.innerHTML = `
           <summary>Sciany kostki (kliknij, aby rozwinac)</summary>
 
           <div class="grid-2">
-            <label class="field-inline">
-              <input id="diceSvgAutoSimplify" type="checkbox" checked />
-              <span>Auto-upraszczanie SVG kostki</span>
-            </label>
-            <div class="field">
-              <label for="diceSvgSimplifyStrength">Sila uproszczenia (1-5)</label>
-              <input id="diceSvgSimplifyStrength" type="number" min="1" max="5" step="1" value="3" />
-            </div>
-          </div>
-
-          <div class="field">
-            <button id="simplifyDiceSvgBtn" type="button">Uprosc zaladowane SVG</button>
-          </div>
-
-          <div class="grid-2">
             <div class="field">
               <label for="diceDepthAll">Glebokosc wszystkich scian (mm)</label>
               <input id="diceDepthAll" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.diceFaceDepth1}" />
@@ -652,6 +637,23 @@ app.innerHTML = `
             <input id="diceClipWithSphere" type="checkbox" />
             <span>Scinanie kula ograniczajaca</span>
           </label>
+        </div>
+
+        <div id="diceSvgAdvancedWrap">
+          <h3 id="diceSvgAdvancedTitle">Uproszczanie SVG</h3>
+          <div class="grid-2">
+            <label class="field-inline">
+              <input id="diceSvgAutoSimplify" type="checkbox" checked />
+              <span>Auto-upraszczanie SVG kostki</span>
+            </label>
+            <div class="field">
+              <label for="diceSvgSimplifyStrength">Sila uproszczenia (1-5)</label>
+              <input id="diceSvgSimplifyStrength" type="number" min="1" max="5" step="1" value="3" />
+            </div>
+          </div>
+          <div class="field">
+            <button id="simplifyDiceSvgBtn" type="button">Uprosc zaladowane SVG</button>
+          </div>
         </div>
 
         <div class="advanced-presets">
