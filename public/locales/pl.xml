@@ -36,6 +36,7 @@
   <entry key="tag.text.placeholder">Wpisz kilka linii tekstu</entry>
   <entry key="tag.front.textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</entry>
   <entry key="tag.front.fontSize">Rozmiar tekstu awersu (mm)</entry>
+  <entry key="text.bold">Pogrubienie tekstu</entry>
   <entry key="tag.front.logoEnabled">Dodaj logo SVG/PNG</entry>
   <entry key="tag.front.logoFile">Plik logo (SVG lub PNG)</entry>
   <entry key="tag.front.logoSize">Rozmiar logo (mm)</entry>
@@ -56,6 +57,7 @@
   <entry key="tag.back.logoRotation">Obrot logo (stopnie)</entry>
   <entry key="dice.size">Rozmiar kostki (mm)</entry>
   <entry key="dice.roundness">Okraglosc krawedzi (mm)</entry>
+  <entry key="dice.sideHoleDiameter">Srednica bocznego otworu na wylot (mm, 0 = brak)</entry>
   <entry key="dice.sphereRadius">Promien kuli podgladu (mm)</entry>
   <entry key="dice.params.summary">Parametry kosci</entry>
   <entry key="dice.preview.summary">Zaawansowane</entry>

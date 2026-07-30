@@ -28,8 +28,10 @@ export interface TagConfig {
   backFontSize: number
   textDepth: number
   backTextDepth: number
+  textBold: boolean
   diceSize: number
   diceRoundness: number
+  diceSideHoleDiameter: number
   diceSphereRadius: number
   diceClipWithSphere: boolean
   diceShowCube: boolean
@@ -112,8 +114,10 @@ export const defaultConfig: TagConfig = {
   textDepth: 1,
   backTextDepth: 1,
   backFontSize: 9,
+  textBold: false,
   diceSize: 20,
   diceRoundness: 2,
+  diceSideHoleDiameter: 0,
   diceSphereRadius: 13.3,
   diceClipWithSphere: false,
   diceShowCube: true,

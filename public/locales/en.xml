@@ -36,6 +36,7 @@
   <entry key="tag.text.placeholder">Enter a few lines of text</entry>
   <entry key="tag.front.textDepth">Front text depth (mm, negative = debossed)</entry>
   <entry key="tag.front.fontSize">Front text size (mm)</entry>
+  <entry key="text.bold">Bold text</entry>
   <entry key="tag.front.logoEnabled">Add SVG/PNG logo</entry>
   <entry key="tag.front.logoFile">Logo file (SVG or PNG)</entry>
   <entry key="tag.front.logoSize">Logo size (mm)</entry>
@@ -56,6 +57,7 @@
   <entry key="tag.back.logoRotation">Logo rotation (degrees)</entry>
   <entry key="dice.size">Dice size (mm)</entry>
   <entry key="dice.roundness">Edge roundness (mm)</entry>
+  <entry key="dice.sideHoleDiameter">Side through-hole diameter (mm, 0 = none)</entry>
   <entry key="dice.sphereRadius">Preview sphere radius (mm)</entry>
   <entry key="dice.params.summary">Dice parameters</entry>
   <entry key="dice.preview.summary">Advanced</entry>

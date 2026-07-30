@@ -128,6 +128,19 @@ app.innerHTML = `
               <input id="diceRoundness" type="number" min="0" max="10" step="0.1" value="${defaultConfig.diceRoundness}" />
             </div>
           </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="diceSideHoleDiameter">Srednica bocznego otworu na wylot (mm, 0 = brak)</label>
+              <input id="diceSideHoleDiameter" type="number" min="0" max="40" step="0.5" value="${defaultConfig.diceSideHoleDiameter}" />
+            </div>
+            <div class="field">
+              <label class="field-inline" for="textBold">
+                <input id="textBold" type="checkbox" ${defaultConfig.textBold ? 'checked' : ''} />
+                <span>Pogrubienie tekstu</span>
+              </label>
+            </div>
+          </div>
         </div>
       </details>
 
@@ -335,7 +348,7 @@ app.innerHTML = `
           </div>
 
           <div class="grid-2">
-            <div class="field">
+            <div class="field" id="diceFaceField1">
               <label for="diceFace1">Sciana 1 (+Z)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled1">
@@ -346,7 +359,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap1">
                 <div class="face-option-row">
                   <label for="diceFace1">Napis sciany</label>
-                  <input id="diceFace1" type="text" maxlength="10" value="${defaultConfig.diceFace1}" />
+                  <textarea id="diceFace1" rows="2" maxlength="21">${defaultConfig.diceFace1}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth1">Glebokosc tekstu (mm)</label>
@@ -380,7 +393,7 @@ app.innerHTML = `
                 <small id="diceFaceLogoStatus1">SVG: brak</small>
               </div>
             </div>
-            <div class="field">
+            <div class="field" id="diceFaceField2">
               <label for="diceFace2">Sciana 2 (-Z)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled2">
@@ -391,7 +404,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap2">
                 <div class="face-option-row">
                   <label for="diceFace2">Napis sciany</label>
-                  <input id="diceFace2" type="text" maxlength="10" value="${defaultConfig.diceFace2}" />
+                  <textarea id="diceFace2" rows="2" maxlength="21">${defaultConfig.diceFace2}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth2">Glebokosc tekstu (mm)</label>
@@ -428,7 +441,7 @@ app.innerHTML = `
           </div>
 
           <div class="grid-2">
-            <div class="field">
+            <div class="field" id="diceFaceField3">
               <label for="diceFace3">Sciana 3 (+X)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled3">
@@ -439,7 +452,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap3">
                 <div class="face-option-row">
                   <label for="diceFace3">Napis sciany</label>
-                  <input id="diceFace3" type="text" maxlength="10" value="${defaultConfig.diceFace3}" />
+                  <textarea id="diceFace3" rows="2" maxlength="21">${defaultConfig.diceFace3}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth3">Glebokosc tekstu (mm)</label>
@@ -473,7 +486,7 @@ app.innerHTML = `
                 <small id="diceFaceLogoStatus3">SVG: brak</small>
               </div>
             </div>
-            <div class="field">
+            <div class="field" id="diceFaceField4">
               <label for="diceFace4">Sciana 4 (-X)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled4">
@@ -484,7 +497,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap4">
                 <div class="face-option-row">
                   <label for="diceFace4">Napis sciany</label>
-                  <input id="diceFace4" type="text" maxlength="10" value="${defaultConfig.diceFace4}" />
+                  <textarea id="diceFace4" rows="2" maxlength="21">${defaultConfig.diceFace4}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth4">Glebokosc tekstu (mm)</label>
@@ -521,7 +534,7 @@ app.innerHTML = `
           </div>
 
           <div class="grid-2">
-            <div class="field">
+            <div class="field" id="diceFaceField5">
               <label for="diceFace5">Sciana 5 (+Y)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled5">
@@ -532,7 +545,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap5">
                 <div class="face-option-row">
                   <label for="diceFace5">Napis sciany</label>
-                  <input id="diceFace5" type="text" maxlength="10" value="${defaultConfig.diceFace5}" />
+                  <textarea id="diceFace5" rows="2" maxlength="21">${defaultConfig.diceFace5}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth5">Glebokosc tekstu (mm)</label>
@@ -566,7 +579,7 @@ app.innerHTML = `
                 <small id="diceFaceLogoStatus5">SVG: brak</small>
               </div>
             </div>
-            <div class="field">
+            <div class="field" id="diceFaceField6">
               <label for="diceFace6">Sciana 6 (-Y)</label>
               <div class="face-option-row face-option-toggle">
                 <label class="field-inline" for="diceFaceTextEnabled6">
@@ -577,7 +590,7 @@ app.innerHTML = `
               <div id="diceFaceTextWrap6">
                 <div class="face-option-row">
                   <label for="diceFace6">Napis sciany</label>
-                  <input id="diceFace6" type="text" maxlength="10" value="${defaultConfig.diceFace6}" />
+                  <textarea id="diceFace6" rows="2" maxlength="21">${defaultConfig.diceFace6}</textarea>
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceDepth6">Glebokosc tekstu (mm)</label>
@@ -704,6 +717,7 @@ const controlsMap = {
   diceControls: requiredElement<HTMLDivElement>('#diceControls'),
   text: requiredElement<HTMLTextAreaElement>('#text'),
   backText: requiredElement<HTMLTextAreaElement>('#backText'),
+  textBold: requiredElement<HTMLInputElement>('#textBold'),
   backTextDepth: requiredElement<HTMLInputElement>('#backTextDepth'),
   backFontSize: requiredElement<HTMLInputElement>('#backFontSize'),
   fontChoice: requiredElement<HTMLSelectElement>('#fontChoice'),
@@ -743,6 +757,7 @@ const controlsMap = {
   holeOffsetY: requiredElement<HTMLInputElement>('#holeOffsetY'),
   diceSize: requiredElement<HTMLInputElement>('#diceSize'),
   diceRoundness: requiredElement<HTMLInputElement>('#diceRoundness'),
+  diceSideHoleDiameter: requiredElement<HTMLInputElement>('#diceSideHoleDiameter'),
   diceSphereRadius: requiredElement<HTMLInputElement>('#diceSphereRadius'),
   diceClipWithSphere: requiredElement<HTMLInputElement>('#diceClipWithSphere'),
   diceShowCube: requiredElement<HTMLInputElement>('#diceShowCube'),
@@ -753,12 +768,12 @@ const controlsMap = {
   simplifyDiceSvgBtn: requiredElement<HTMLButtonElement>('#simplifyDiceSvgBtn'),
   diceDepthAll: requiredElement<HTMLInputElement>('#diceDepthAll'),
   applyDiceDepthAllBtn: requiredElement<HTMLButtonElement>('#applyDiceDepthAllBtn'),
-  diceFace1: requiredElement<HTMLInputElement>('#diceFace1'),
-  diceFace2: requiredElement<HTMLInputElement>('#diceFace2'),
-  diceFace3: requiredElement<HTMLInputElement>('#diceFace3'),
-  diceFace4: requiredElement<HTMLInputElement>('#diceFace4'),
-  diceFace5: requiredElement<HTMLInputElement>('#diceFace5'),
-  diceFace6: requiredElement<HTMLInputElement>('#diceFace6'),
+  diceFace1: requiredElement<HTMLTextAreaElement>('#diceFace1'),
+  diceFace2: requiredElement<HTMLTextAreaElement>('#diceFace2'),
+  diceFace3: requiredElement<HTMLTextAreaElement>('#diceFace3'),
+  diceFace4: requiredElement<HTMLTextAreaElement>('#diceFace4'),
+  diceFace5: requiredElement<HTMLTextAreaElement>('#diceFace5'),
+  diceFace6: requiredElement<HTMLTextAreaElement>('#diceFace6'),
   diceFaceTextEnabled1: requiredElement<HTMLInputElement>('#diceFaceTextEnabled1'),
   diceFaceTextEnabled2: requiredElement<HTMLInputElement>('#diceFaceTextEnabled2'),
   diceFaceTextEnabled3: requiredElement<HTMLInputElement>('#diceFaceTextEnabled3'),
@@ -771,6 +786,12 @@ const controlsMap = {
   diceFaceLogoEnabled4: requiredElement<HTMLInputElement>('#diceFaceLogoEnabled4'),
   diceFaceLogoEnabled5: requiredElement<HTMLInputElement>('#diceFaceLogoEnabled5'),
   diceFaceLogoEnabled6: requiredElement<HTMLInputElement>('#diceFaceLogoEnabled6'),
+  diceFaceField1: requiredElement<HTMLDivElement>('#diceFaceField1'),
+  diceFaceField2: requiredElement<HTMLDivElement>('#diceFaceField2'),
+  diceFaceField3: requiredElement<HTMLDivElement>('#diceFaceField3'),
+  diceFaceField4: requiredElement<HTMLDivElement>('#diceFaceField4'),
+  diceFaceField5: requiredElement<HTMLDivElement>('#diceFaceField5'),
+  diceFaceField6: requiredElement<HTMLDivElement>('#diceFaceField6'),
   diceFaceTextWrap1: requiredElement<HTMLDivElement>('#diceFaceTextWrap1'),
   diceFaceTextWrap2: requiredElement<HTMLDivElement>('#diceFaceTextWrap2'),
   diceFaceTextWrap3: requiredElement<HTMLDivElement>('#diceFaceTextWrap3'),
@@ -854,6 +875,8 @@ const diceFaceLogoStatusState: Record<number, StatusState> = {
   6: { key: 'status.dice.logo.empty', isError: false },
 }
 
+const diceSideHoleFaces = [3, 4] as const
+
 function t(key: string, vars: Record<string, string | number> = {}, fallback?: string): string {
   return translate(translations, key, vars, fallback)
 }
@@ -892,6 +915,39 @@ function updateTagBasePanelSummary(): void {
   summary.textContent = isPuzzle
     ? t('tag.base.summary.puzzle', {}, 'Parametry puzzla')
     : t('tag.base.summary.tag', {}, 'Parametry tagu')
+}
+
+function getMaxDiceSideHoleDiameter(diceSize: number): number {
+  return Math.max(0, diceSize * 0.75)
+}
+
+function isDiceFaceDisabledBySideHole(face: number, sideHoleDiameter: number): boolean {
+  return sideHoleDiameter > 0.001 && diceSideHoleFaces.includes(face as (typeof diceSideHoleFaces)[number])
+}
+
+function getDiceSideHoleDiameterFromForm(): number {
+  const diceSize = clamp(Number(controlsMap.diceSize.value), 10, 60)
+  return clamp(Number(controlsMap.diceSideHoleDiameter.value), 0, getMaxDiceSideHoleDiameter(diceSize))
+}
+
+function isDiceFaceActiveInForm(face: number): boolean {
+  return !isDiceFaceDisabledBySideHole(face, getDiceSideHoleDiameterFromForm())
+}
+
+function isDiceFaceActiveForConfig(face: number, config: TagConfig): boolean {
+  const sideHoleDiameter = clamp(config.diceSideHoleDiameter, 0, getMaxDiceSideHoleDiameter(config.diceSize))
+  return !isDiceFaceDisabledBySideHole(face, sideHoleDiameter)
+}
+
+function updateDiceSideHoleConstraints(): void {
+  const diceSize = clamp(Number(controlsMap.diceSize.value), 10, 60)
+  const maxDiameter = getMaxDiceSideHoleDiameter(diceSize)
+  controlsMap.diceSideHoleDiameter.max = String(Math.round(maxDiameter * 10) / 10)
+
+  const currentDiameter = Number(controlsMap.diceSideHoleDiameter.value)
+  if (Number.isFinite(currentDiameter) && currentDiameter > maxDiameter) {
+    controlsMap.diceSideHoleDiameter.value = String(Math.round(maxDiameter * 10) / 10)
+  }
 }
 
 function renderStatus(target: HTMLElement, state: StatusState): void {
@@ -968,6 +1024,7 @@ function applyStaticTranslations(): void {
   setAttr('#text', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
   setText('label[for="textDepth"]', 'tag.front.textDepth', 'Glebokosc tekstu awersu (mm, ujemna = wklesly)')
   setText('label[for="fontSize"]', 'tag.front.fontSize', 'Rozmiar tekstu awersu (mm)')
+  setText('#textBold + span', 'text.bold', 'Pogrubienie tekstu')
   setText('#logoEnabled + span', 'tag.front.logoEnabled', 'Dodaj logo SVG/PNG')
   setText('label[for="logoFile"]', 'tag.front.logoFile', 'Plik logo (SVG lub PNG)')
   setText('label[for="logoSize"]', 'tag.front.logoSize', 'Rozmiar logo (mm)')
@@ -991,6 +1048,7 @@ function applyStaticTranslations(): void {
 
   setText('label[for="diceSize"]', 'dice.size', 'Rozmiar kostki (mm)')
   setText('label[for="diceRoundness"]', 'dice.roundness', 'Okraglosc krawedzi (mm)')
+  setText('label[for="diceSideHoleDiameter"]', 'dice.sideHoleDiameter', 'Srednica bocznego otworu na wylot (mm, 0 = brak)')
   setText('label[for="diceSphereRadius"]', 'dice.sphereRadius', 'Promien kuli podgladu (mm)')
   setText('#advancedPanel > summary', 'dice.preview.summary', 'Zaawansowane')
   setText('#diceShowCube + span', 'dice.preview.showCube', 'Widoczny szescian')
@@ -1234,7 +1292,17 @@ function sanitizeTextInput(raw: string): string {
 }
 
 function sanitizeDiceFaceText(raw: string): string {
-  return raw.replace(/\r|\n/g, '').trim().slice(0, 10)
+  const lines = raw
+    .replace(/\r/g, '')
+    .split('\n')
+    .slice(0, 2)
+    .map((line) => line.slice(0, 10).trim())
+
+  while (lines.length > 1 && lines.at(-1) === '') {
+    lines.pop()
+  }
+
+  return lines.join('\n').trim()
 }
 
 function getTextLines(text: string): string[] {
@@ -1409,12 +1477,27 @@ function updateDiceFaceOptionVisibility(face: number): void {
     5: controlsMap.diceFaceLogoWrap5,
     6: controlsMap.diceFaceLogoWrap6,
   }
+  const fieldMap: Record<number, HTMLDivElement> = {
+    1: controlsMap.diceFaceField1,
+    2: controlsMap.diceFaceField2,
+    3: controlsMap.diceFaceField3,
+    4: controlsMap.diceFaceField4,
+    5: controlsMap.diceFaceField5,
+    6: controlsMap.diceFaceField6,
+  }
+
+  const isActive = isDiceFaceActiveInForm(face)
+  fieldMap[face].style.display = isActive ? '' : 'none'
+  if (!isActive) {
+    return
+  }
 
   textWrapMap[face].style.display = textEnabledMap[face].checked ? '' : 'none'
   logoWrapMap[face].style.display = logoEnabledMap[face].checked ? '' : 'none'
 }
 
 function updateAllDiceFaceOptionVisibility(): void {
+  updateDiceSideHoleConstraints()
   updateDiceFaceOptionVisibility(1)
   updateDiceFaceOptionVisibility(2)
   updateDiceFaceOptionVisibility(3)
@@ -2240,7 +2323,49 @@ function createLaidOutTextGeometries(config: TagConfig, depth: number): TextGeom
   const overallCenterY = (minY + maxY) / 2
   geometries.forEach((geometry) => geometry.translate(-overallCenterX, -overallCenterY, 0))
 
-  return geometries
+  return applyTextBoldToGeometries(geometries, config.fontSize, config.textBold)
+}
+
+function getTextBoldOffsets(fontSize: number, enabled: boolean): THREE.Vector2[] {
+  if (!enabled) {
+    return [new THREE.Vector2(0, 0)]
+  }
+
+  const offset = clamp(fontSize * 0.045, 0.12, 0.7)
+  return [
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(offset, 0),
+    new THREE.Vector2(-offset, 0),
+    new THREE.Vector2(0, offset),
+    new THREE.Vector2(0, -offset),
+    new THREE.Vector2(offset * 0.7, offset * 0.7),
+    new THREE.Vector2(offset * 0.7, -offset * 0.7),
+    new THREE.Vector2(-offset * 0.7, offset * 0.7),
+    new THREE.Vector2(-offset * 0.7, -offset * 0.7),
+  ]
+}
+
+function applyTextBoldToGeometries(
+  sourceGeometries: TextGeometry[],
+  fontSize: number,
+  enabled: boolean,
+): TextGeometry[] {
+  const offsets = getTextBoldOffsets(fontSize, enabled)
+  if (offsets.length === 1) {
+    return sourceGeometries
+  }
+
+  const boldGeometries: TextGeometry[] = []
+  sourceGeometries.forEach((geometry) => {
+    offsets.forEach((offset) => {
+      const clone = geometry.clone()
+      clone.translate(offset.x, offset.y, 0)
+      boldGeometries.push(clone)
+    })
+    geometry.dispose()
+  })
+
+  return boldGeometries
 }
 
 function cloneShiftedShape(shape: THREE.Shape, offsetX: number, offsetY: number): THREE.Shape {
@@ -2635,12 +2760,14 @@ function getConfigFromForm(): TagConfig {
   const thickness = clamp(Number(controlsMap.thickness.value), 1.5, 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
+  const textBold = controlsMap.textBold.checked
   const maxCorner = Math.min(width, height) * 0.49
   const text = sanitizeTextInput(controlsMap.text.value)
   const backText = sanitizeTextInput(controlsMap.backText.value)
   const diceSize = clamp(Number(controlsMap.diceSize.value), 10, 60)
   const maxDiceRoundness = Math.max(0, diceSize * 0.18)
   const diceRoundness = clamp(Number(controlsMap.diceRoundness.value), 0, maxDiceRoundness)
+  const diceSideHoleDiameter = clamp(Number(controlsMap.diceSideHoleDiameter.value), 0, getMaxDiceSideHoleDiameter(diceSize))
   const diceSphereRadius = clamp(Number(controlsMap.diceSphereRadius.value), 0, 100)
   const diceClipWithSphere = controlsMap.diceClipWithSphere.checked
   const diceShowCube = controlsMap.diceShowCube.checked
@@ -2712,8 +2839,10 @@ function getConfigFromForm(): TagConfig {
     backFontSize: clamp(Number(controlsMap.backFontSize.value), 4, 22),
     textDepth,
     backTextDepth,
+    textBold,
     diceSize,
     diceRoundness,
+    diceSideHoleDiameter,
     diceSphereRadius,
     diceClipWithSphere,
     diceShowCube,
@@ -2791,6 +2920,7 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.holeOffsetY.value = String(config.holeOffsetY)
   controlsMap.diceSize.value = String(config.diceSize)
   controlsMap.diceRoundness.value = String(config.diceRoundness)
+  controlsMap.diceSideHoleDiameter.value = String(config.diceSideHoleDiameter)
   controlsMap.diceSphereRadius.value = String(config.diceSphereRadius)
   controlsMap.diceClipWithSphere.checked = Boolean(config.diceClipWithSphere)
   controlsMap.diceShowCube.checked = Boolean(config.diceShowCube)
@@ -2843,6 +2973,7 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.backFontSize.value = String(config.backFontSize)
   controlsMap.textDepth.value = String(config.textDepth)
   controlsMap.backTextDepth.value = String(config.backTextDepth)
+  controlsMap.textBold.checked = Boolean(config.textBold)
   controlsMap.logoEnabled.checked = Boolean(config.logoEnabled)
   controlsMap.logoSize.value = String(config.logoSize)
   controlsMap.logoDepth.value = String(config.logoDepth)
@@ -2869,35 +3000,68 @@ function createBaseMesh(config: TagConfig): THREE.Mesh {
   return createTagPuzzleBaseMesh(config, baseMaterial, { clamp, shapeFromPoints })
 }
 
-function createCenteredTextGeometry(text: string, fontSize: number, depth: number): TextGeometry | null {
+function createCenteredTextGeometries(text: string, fontSize: number, depth: number, boldEnabled: boolean): TextGeometry[] {
   if (!loadedFont) {
-    return null
+    return []
   }
 
-  const normalizedText = normalizeTextForFont(text)
-  if (normalizedText.length === 0) {
-    return null
+  const lines = sanitizeDiceFaceText(text)
+    .split('\n')
+    .slice(0, 2)
+    .map((line) => normalizeTextForFont(line))
+    .filter((line) => line.length > 0)
+
+  if (lines.length === 0) {
+    return []
   }
 
-  const geometry = new TextGeometry(normalizedText, {
-    font: loadedFont as never,
-    size: fontSize,
-    depth,
-    curveSegments: 18,
-    bevelEnabled: false,
+  const lineSpacing = fontSize * textLineSpacingFactor
+  const verticalCenterOffset = ((lines.length - 1) * lineSpacing) / 2
+  const geometries: TextGeometry[] = []
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  lines.forEach((line, index) => {
+    const geometry = new TextGeometry(line, {
+      font: loadedFont as never,
+      size: fontSize,
+      depth,
+      curveSegments: 18,
+      bevelEnabled: false,
+    })
+
+    geometry.computeBoundingBox()
+    const box = geometry.boundingBox
+    if (!box) {
+      geometry.dispose()
+      return
+    }
+
+    const centerX = (box.max.x + box.min.x) / 2
+    const centerY = (box.max.y + box.min.y) / 2
+    const lineOffsetY = verticalCenterOffset - index * lineSpacing
+
+    minX = Math.min(minX, box.min.x - centerX)
+    maxX = Math.max(maxX, box.max.x - centerX)
+    minY = Math.min(minY, box.min.y - centerY + lineOffsetY)
+    maxY = Math.max(maxY, box.max.y - centerY + lineOffsetY)
+
+    geometry.translate(-centerX, -centerY + lineOffsetY, 0)
+    geometries.push(geometry)
   })
 
-  geometry.computeBoundingBox()
-  const box = geometry.boundingBox
-  if (!box) {
-    geometry.dispose()
-    return null
+  if (geometries.length === 0) {
+    return []
   }
 
-  const centerX = (box.max.x + box.min.x) / 2
-  const centerY = (box.max.y + box.min.y) / 2
-  geometry.translate(-centerX, -centerY, 0)
-  return geometry
+  const overallCenterX = (minX + maxX) / 2
+  const overallCenterY = (minY + maxY) / 2
+  geometries.forEach((geometry) => geometry.translate(-overallCenterX, -overallCenterY, 0))
+
+  return applyTextBoldToGeometries(geometries, fontSize, boldEnabled)
 }
 
 function setDicePreviewVisibility(object: THREE.Object3D, config: TagConfig): void {
@@ -2947,10 +3111,30 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
   const size = config.diceSize
   const maxRoundness = size * 0.18
   const roundness = clamp(config.diceRoundness, 0, maxRoundness)
+  const sideHoleDiameter = clamp(config.diceSideHoleDiameter, 0, getMaxDiceSideHoleDiameter(size))
   const baseGeometry = new RoundedBoxGeometry(size, size, size, 4, roundness)
   baseGeometry.computeVertexNormals()
   let baseMesh: THREE.Mesh = new THREE.Mesh(baseGeometry, baseMaterial)
   baseMesh.userData.previewRole = 'cube'
+
+  if (sideHoleDiameter > 0.001) {
+    const sideHoleMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(sideHoleDiameter / 2, sideHoleDiameter / 2, size + 2, 48),
+      baseMaterial,
+    )
+    sideHoleMesh.rotation.z = Math.PI / 2
+    sideHoleMesh.updateMatrix()
+
+    baseMesh.updateMatrix()
+    const holedBaseMesh = CSG.subtract(baseMesh, sideHoleMesh)
+    holedBaseMesh.material = baseMaterial
+    holedBaseMesh.geometry.computeVertexNormals()
+
+    baseMesh.geometry.dispose()
+    sideHoleMesh.geometry.dispose()
+    baseMesh = holedBaseMesh
+    baseMesh.userData.previewRole = 'cube'
+  }
 
   const faceDefs: Array<{
     face: number
@@ -2970,7 +3154,7 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
     { face: 4, textEnabled: config.diceFaceTextEnabled4, logoEnabled: config.diceFaceLogoEnabled4, text: config.diceFace4, depth: config.diceFaceDepth4, fontSize: config.diceFaceFontSize4, logoSize: config.diceFaceLogoSize4, logoDepth: config.diceFaceLogoDepth4, normal: new THREE.Vector3(-1, 0, 0), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
     { face: 5, textEnabled: config.diceFaceTextEnabled5, logoEnabled: config.diceFaceLogoEnabled5, text: config.diceFace5, depth: config.diceFaceDepth5, fontSize: config.diceFaceFontSize5, logoSize: config.diceFaceLogoSize5, logoDepth: config.diceFaceLogoDepth5, normal: new THREE.Vector3(0, 1, 0), rotation: new THREE.Euler(-Math.PI / 2, 0, 0) },
     { face: 6, textEnabled: config.diceFaceTextEnabled6, logoEnabled: config.diceFaceLogoEnabled6, text: config.diceFace6, depth: config.diceFaceDepth6, fontSize: config.diceFaceFontSize6, logoSize: config.diceFaceLogoSize6, logoDepth: config.diceFaceLogoDepth6, normal: new THREE.Vector3(0, -1, 0), rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI) },
-  ]
+  ].filter((face) => isDiceFaceActiveForConfig(face.face, config))
 
   const availableTextArea = size * 0.62
   const embossMeshes: THREE.Mesh[] = []
@@ -2992,29 +3176,33 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
     const faceFontSize = clamp(face.fontSize, 2, availableTextArea)
 
     if (faceDepth > 0) {
-      const geometry = createCenteredTextGeometry(face.text, faceFontSize, absDepth)
-      if (!geometry) {
+      const geometries = createCenteredTextGeometries(face.text, faceFontSize, absDepth, config.textBold)
+      if (geometries.length === 0) {
         return
       }
 
-      const mesh = new THREE.Mesh(geometry, detailMaterial)
-      mesh.rotation.copy(face.rotation)
-      mesh.position.copy(face.normal.clone().multiplyScalar(size / 2 - 0.02))
-      embossMeshes.push(mesh)
+      geometries.forEach((geometry) => {
+        const mesh = new THREE.Mesh(geometry, detailMaterial)
+        mesh.rotation.copy(face.rotation)
+        mesh.position.copy(face.normal.clone().multiplyScalar(size / 2 - 0.02))
+        embossMeshes.push(mesh)
+      })
       return
     }
 
     const cutterDepth = absDepth + seamOverlap
-    const cutterGeometry = createCenteredTextGeometry(face.text, faceFontSize, cutterDepth)
-    if (!cutterGeometry) {
+    const cutterGeometries = createCenteredTextGeometries(face.text, faceFontSize, cutterDepth, config.textBold)
+    if (cutterGeometries.length === 0) {
       return
     }
 
-    const cutter = new THREE.Mesh(cutterGeometry, baseMaterial)
-    cutter.rotation.copy(face.rotation)
-    cutter.position.copy(face.normal.clone().multiplyScalar(size / 2 - cutterDepth + seamOverlap * 0.5))
-    cutter.updateMatrix()
-    cutters.push(cutter)
+    cutterGeometries.forEach((cutterGeometry) => {
+      const cutter = new THREE.Mesh(cutterGeometry, baseMaterial)
+      cutter.rotation.copy(face.rotation)
+      cutter.position.copy(face.normal.clone().multiplyScalar(size / 2 - cutterDepth + seamOverlap * 0.5))
+      cutter.updateMatrix()
+      cutters.push(cutter)
+    })
   })
 
   faceDefs.forEach((face) => {
@@ -3625,6 +3813,7 @@ function wireEvents(): void {
     controlsMap.modelType,
     controlsMap.text,
     controlsMap.backText,
+    controlsMap.textBold,
     controlsMap.backFontSize,
     controlsMap.backTextDepth,
     controlsMap.logoEnabled,
@@ -3650,6 +3839,7 @@ function wireEvents(): void {
     controlsMap.holeOffsetY,
     controlsMap.diceSize,
     controlsMap.diceRoundness,
+    controlsMap.diceSideHoleDiameter,
     controlsMap.diceSphereRadius,
     controlsMap.diceClipWithSphere,
     controlsMap.diceShowCube,
@@ -3749,6 +3939,15 @@ function wireEvents(): void {
   controlsMap.width.addEventListener('change', () => {
     syncPuzzleDimensionsInForm()
   })
+
+  const refreshDiceFaceAvailability = (): void => {
+    updateAllDiceFaceOptionVisibility()
+  }
+
+  controlsMap.diceSize.addEventListener('input', refreshDiceFaceAvailability)
+  controlsMap.diceSize.addEventListener('change', refreshDiceFaceAvailability)
+  controlsMap.diceSideHoleDiameter.addEventListener('input', refreshDiceFaceAvailability)
+  controlsMap.diceSideHoleDiameter.addEventListener('change', refreshDiceFaceAvailability)
 
   attachDiceFaceToggleHandlers(
     [

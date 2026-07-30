@@ -276,6 +276,11 @@ textarea {
   min-width: 0;
 }
 
+#diceFacesPanel .face-option-row > textarea {
+  min-height: 3.6rem;
+  resize: vertical;
+}
+
 @media (max-width: 560px) {
   #diceFacesPanel .face-option-row {
     grid-template-columns: 1fr;
