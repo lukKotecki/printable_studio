@@ -2266,6 +2266,48 @@ function disposeObjectDeep(object: THREE.Object3D): void {
   })
 }
 
+function isClosedTwoManifoldGeometry(geometry: THREE.BufferGeometry): boolean {
+  const position = geometry.getAttribute('position')
+  if (!position || position.count < 3 || position.count % 3 !== 0) {
+    return false
+  }
+
+  // CSG creates a non-indexed geometry. Quantizing positions welds the tiny
+  // floating-point differences left at boolean intersections before checking
+  // whether every triangle edge has exactly one neighbouring triangle.
+  const tolerance = 1e-5
+  const vertexKey = (index: number): string => {
+    const x = position.getX(index)
+    const y = position.getY(index)
+    const z = position.getZ(index)
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+      return 'invalid'
+    }
+    return `${Math.round(x / tolerance)},${Math.round(y / tolerance)},${Math.round(z / tolerance)}`
+  }
+
+  const edgeCounts = new Map<string, number>()
+  const addEdge = (first: string, second: string): boolean => {
+    if (first === 'invalid' || second === 'invalid' || first === second) {
+      return false
+    }
+    const edge = first < second ? `${first}|${second}` : `${second}|${first}`
+    edgeCounts.set(edge, (edgeCounts.get(edge) ?? 0) + 1)
+    return true
+  }
+
+  for (let index = 0; index < position.count; index += 3) {
+    const a = vertexKey(index)
+    const b = vertexKey(index + 1)
+    const c = vertexKey(index + 2)
+    if (!addEdge(a, b) || !addEdge(b, c) || !addEdge(c, a)) {
+      return false
+    }
+  }
+
+  return edgeCounts.size > 0 && [...edgeCounts.values()].every((count) => count === 2)
+}
+
 function createLaidOutTextGeometries(config: TagConfig, depth: number): TextGeometry[] {
   if (!loadedFont) {
     return []
@@ -2519,6 +2561,12 @@ function applyCuttersToTagMeshes(meshes: THREE.Mesh[], createCutters: () => THRE
       mergedCutter.updateMatrix()
 
       const debossedMesh = CSG.subtract(sourceMesh, mergedCutter)
+      if (!isClosedTwoManifoldGeometry(debossedMesh.geometry)) {
+        debossedMesh.geometry.dispose()
+        mergedCutter.geometry.dispose()
+        return sourceMesh
+      }
+
       debossedMesh.material = baseMaterial
       debossedMesh.geometry.computeVertexNormals()
 
@@ -3535,6 +3583,21 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
     mergedCutter.updateMatrix()
 
     const debossMesh = CSG.subtract(baseMesh, mergedCutter)
+    if (!isClosedTwoManifoldGeometry(debossMesh.geometry)) {
+      debossMesh.geometry.dispose()
+      mergedCutter.geometry.dispose()
+
+      // The legacy construction uses independently closed extrusions and is
+      // more reliable for shallow engraving. A through-cut cannot use it,
+      // because it would create a zero-height lower extrusion.
+      if (Math.abs(config.textDepth) >= config.thickness - 0.001) {
+        return [baseMesh]
+      }
+
+      baseMesh.geometry.dispose()
+      return createDebossMeshesLegacy(config)
+    }
+
     debossMesh.material = baseMaterial
     debossMesh.geometry.computeVertexNormals()
 
@@ -3548,6 +3611,12 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
         bridgeMesh.updateMatrix()
 
         const nextMesh = CSG.union(bridgedMesh, bridgeMesh)
+        if (!isClosedTwoManifoldGeometry(nextMesh.geometry)) {
+          nextMesh.geometry.dispose()
+          bridgeMesh.geometry.dispose()
+          return
+        }
+
         nextMesh.material = baseMaterial
         nextMesh.geometry.computeVertexNormals()
 
