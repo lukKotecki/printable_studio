@@ -1,4 +1,4 @@
-export type ModelType = 'tag' | 'dice' | 'puzzle'
+export type ModelType = 'tag' | 'tag3d' | 'dice' | 'puzzle'
 export type TagShape = 'rounded' | 'capsule' | 'circle' | 'puzzle'
 export type LanguageCode = 'pl' | 'en'
 export type FontChoice =
@@ -190,6 +190,7 @@ export const defaultLanguage: LanguageCode = 'pl'
 export interface PersistedAppState {
   config: TagConfig
   fontChoice: Exclude<FontChoice, 'custom'>
+  modelDrafts?: Partial<Record<'tag' | 'tag3d' | 'puzzle', TagConfig>>
 }
 
 export const builtinFontUrls: Record<Exclude<FontChoice, 'custom'>, string> = {

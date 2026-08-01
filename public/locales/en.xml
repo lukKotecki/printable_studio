@@ -3,6 +3,7 @@
   <entry key="language.aria">Language</entry>
   <entry key="form.modelType">Model type</entry>
   <entry key="model.tag">Flat tag</entry>
+  <entry key="model.tag3d">Tag 3D</entry>
   <entry key="model.puzzle">Puzzle (beta)</entry>
   <entry key="model.dice">D6 Dice (beta)</entry>
   <entry key="form.font">Font</entry>

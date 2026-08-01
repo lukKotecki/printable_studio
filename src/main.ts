@@ -8,6 +8,7 @@ import { TTFLoader } from 'three/examples/jsm/loaders/TTFLoader.js'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { CSG } from 'three-csg-ts'
 import {
   builtinFontUrls,
@@ -81,6 +82,7 @@ app.innerHTML = `
         <label for="modelType">Typ modelu</label>
         <select id="modelType">
           <option value="tag">Plaski tag</option>
+          <option value="tag3d">Tag 3D</option>
           <option value="puzzle">Puzzle (beta)</option>
           <option value="dice">Kostka K6 (beta)</option>
         </select>
@@ -981,6 +983,7 @@ function applyStaticTranslations(): void {
   setText('.subtitle', 'app.subtitle', 'Lokalny generator tagow 3D z eksportem STL.')
   setText('label[for="modelType"]', 'form.modelType', 'Typ modelu')
   setText('#modelType option[value="tag"]', 'model.tag', 'Plaski tag')
+  setText('#modelType option[value="tag3d"]', 'model.tag3d', 'Tag 3D')
   setText('#modelType option[value="puzzle"]', 'model.puzzle', 'Puzzle (beta)')
   setText('#modelType option[value="dice"]', 'model.dice', 'Kostka K6 (beta)')
   setText('label[for="fontChoice"]', 'form.font', 'Font')
@@ -1510,6 +1513,8 @@ function updateModelControlsVisibility(): void {
   const modelType = controlsMap.modelType.value as ModelType
   const isDice = modelType === 'dice'
   const isPuzzle = modelType === 'puzzle'
+  const allowsNoHole = modelType === 'tag3d'
+  const allowsTallTag = modelType === 'tag3d'
   controlsMap.diceParamsPanel.style.display = isDice ? '' : 'none'
   controlsMap.tagControls.style.display = isDice ? 'none' : ''
   controlsMap.diceControls.style.display = isDice ? '' : 'none'
@@ -1519,6 +1524,8 @@ function updateModelControlsVisibility(): void {
   controlsMap.shape.disabled = isPuzzle
   controlsMap.height.disabled = isPuzzle
   controlsMap.holeSettingsWrap.style.display = isPuzzle ? 'none' : ''
+  controlsMap.holeDiameter.min = allowsNoHole ? '0' : '2'
+  controlsMap.thickness.max = allowsTallTag ? '100' : '8'
   if (isPuzzle) {
     controlsMap.shape.value = 'puzzle'
     controlsMap.height.value = controlsMap.width.value
@@ -2268,7 +2275,9 @@ function disposeObjectDeep(object: THREE.Object3D): void {
 
 function isClosedTwoManifoldGeometry(geometry: THREE.BufferGeometry): boolean {
   const position = geometry.getAttribute('position')
-  if (!position || position.count < 3 || position.count % 3 !== 0) {
+  const indexAttribute = geometry.getIndex()
+  const vertexCount = indexAttribute ? indexAttribute.count : position?.count ?? 0
+  if (!position || vertexCount < 3 || vertexCount % 3 !== 0) {
     return false
   }
 
@@ -2296,10 +2305,10 @@ function isClosedTwoManifoldGeometry(geometry: THREE.BufferGeometry): boolean {
     return true
   }
 
-  for (let index = 0; index < position.count; index += 3) {
-    const a = vertexKey(index)
-    const b = vertexKey(index + 1)
-    const c = vertexKey(index + 2)
+  for (let index = 0; index < vertexCount; index += 3) {
+    const a = vertexKey(indexAttribute ? indexAttribute.getX(index) : index)
+    const b = vertexKey(indexAttribute ? indexAttribute.getX(index + 1) : index + 1)
+    const c = vertexKey(indexAttribute ? indexAttribute.getX(index + 2) : index + 2)
     if (!addEdge(a, b) || !addEdge(b, c) || !addEdge(c, a)) {
       return false
     }
@@ -2537,7 +2546,11 @@ function createTagLogoCutters(config: TagConfig): THREE.Mesh[] {
   })
 }
 
-function applyCuttersToTagMeshes(meshes: THREE.Mesh[], createCutters: () => THREE.Mesh[]): THREE.Mesh[] {
+function applyCuttersToTagMeshes(
+  meshes: THREE.Mesh[],
+  createCutters: () => THREE.Mesh[],
+  acceptWeldedCsgResult = false,
+): THREE.Mesh[] {
   return meshes.map((sourceMesh) => {
     const cutters = createCutters()
     if (cutters.length === 0) {
@@ -2561,12 +2574,23 @@ function applyCuttersToTagMeshes(meshes: THREE.Mesh[], createCutters: () => THRE
       mergedCutter.updateMatrix()
 
       const debossedMesh = CSG.subtract(sourceMesh, mergedCutter)
-      if (!isClosedTwoManifoldGeometry(debossedMesh.geometry)) {
+  // CSG supplies per-face attributes, which would otherwise prevent
+  // `mergeVertices()` from welding matching positions at the cut seam.
+  debossedMesh.geometry.deleteAttribute('normal')
+  debossedMesh.geometry.deleteAttribute('uv')
+  debossedMesh.geometry.deleteAttribute('color')
+  const weldedGeometry = mergeVertices(debossedMesh.geometry, 1e-4)
+  debossedMesh.geometry.dispose()
+  debossedMesh.geometry = weldedGeometry
+      if (!acceptWeldedCsgResult && !isClosedTwoManifoldGeometry(debossedMesh.geometry)) {
         debossedMesh.geometry.dispose()
         mergedCutter.geometry.dispose()
         return sourceMesh
       }
 
+      const flatShadedGeometry = debossedMesh.geometry.toNonIndexed()
+      debossedMesh.geometry.dispose()
+      debossedMesh.geometry = flatShadedGeometry
       debossedMesh.material = baseMaterial
       debossedMesh.geometry.computeVertexNormals()
 
@@ -2622,14 +2646,18 @@ function createBackTextCutters(config: TagConfig): THREE.Mesh[] {
     const cutterMesh = new THREE.Mesh(geometry, baseMaterial)
     cutterMesh.rotation.y = Math.PI
     // Position cutter so it enters the solid from the bottom by requested depth.
-    cutterMesh.position.z = Math.abs(config.backTextDepth) - seamOverlap * 0.5
+    cutterMesh.position.z = Math.abs(config.backTextDepth) + seamOverlap * 0.5
     cutterMesh.updateMatrix()
     return cutterMesh
   })
 }
 
 function applyDebossBackTextToTagMeshes(meshes: THREE.Mesh[], config: TagConfig): THREE.Mesh[] {
-  return applyCuttersToTagMeshes(meshes, () => createBackTextCutters(config))
+  return applyCuttersToTagMeshes(
+    meshes,
+    () => createBackTextCutters(config),
+    config.modelType === 'tag' || config.modelType === 'tag3d',
+  )
 }
 
 function createBackLogoObject(config: TagConfig): THREE.Object3D | null {
@@ -2675,7 +2703,7 @@ function createBackLogoCutters(config: TagConfig): THREE.Mesh[] {
     const cutter = new THREE.Mesh(geometry, baseMaterial)
     cutter.rotation.y = Math.PI
     // Position cutter so it enters the solid from the bottom by requested depth.
-    cutter.position.z = Math.abs(config.backLogoDepth) - seamOverlap * 0.5
+    cutter.position.z = Math.abs(config.backLogoDepth) + seamOverlap * 0.5
     cutter.updateMatrix()
     return cutter
   })
@@ -2794,7 +2822,13 @@ function createThroughCutBridges(config: TagConfig): THREE.Mesh[] {
 
 function getConfigFromForm(): TagConfig {
   const rawModelType = controlsMap.modelType.value as ModelType
-  const modelType: ModelType = rawModelType === 'dice' ? 'dice' : rawModelType === 'puzzle' ? 'puzzle' : 'tag'
+  const modelType: ModelType = rawModelType === 'dice'
+    ? 'dice'
+    : rawModelType === 'puzzle'
+      ? 'puzzle'
+      : rawModelType === 'tag3d'
+        ? 'tag3d'
+        : 'tag'
   const rawShape = controlsMap.shape.value as TagShape
   const shape: TagShape = modelType === 'puzzle'
     ? 'puzzle'
@@ -2805,7 +2839,7 @@ function getConfigFromForm(): TagConfig {
   const puzzleSize = clamp(Number(controlsMap.width.value), 20, 120)
   const width = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.width.value), 20, 120)
   const height = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.height.value), 15, 60)
-  const thickness = clamp(Number(controlsMap.thickness.value), 1.5, 8)
+  const thickness = clamp(Number(controlsMap.thickness.value), 1.5, modelType === 'tag3d' ? 100 : 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
   const textBold = controlsMap.textBold.checked
@@ -2879,7 +2913,7 @@ function getConfigFromForm(): TagConfig {
     height,
     thickness,
     cornerRadius: clamp(Number(controlsMap.cornerRadius.value), 0, maxCorner),
-    holeDiameter: clamp(Number(controlsMap.holeDiameter.value), 2, 12),
+    holeDiameter: clamp(Number(controlsMap.holeDiameter.value), modelType === 'tag3d' ? 0 : 2, 12),
     holeMargin: clamp(Number(controlsMap.holeMargin.value), 2, 20),
     holeOffsetX: clamp(Number(controlsMap.holeOffsetX.value), -60, 60),
     holeOffsetY: clamp(Number(controlsMap.holeOffsetY.value), -60, 60),
@@ -3639,21 +3673,9 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
   }
 }
 
-function rebuildTag(): void {
-  if (!loadedFont) {
-    return
-  }
-
-  const config = getConfigFromForm()
-  if (activeTagObject) {
-    scene.remove(activeTagObject)
-    disposeObjectDeep(activeTagObject)
-  }
-
+function createTagSurfaceObject(config: TagConfig): THREE.Group {
   const modelGroup = new THREE.Group()
-  if (config.modelType === 'dice') {
-    modelGroup.add(createDiceObject(config))
-  } else if (config.textDepth < 0) {
+  if (config.textDepth < 0) {
     let tagMeshes = createDebossMeshes(config)
     tagMeshes = applyDebossLogoToTagMeshes(tagMeshes, config)
     tagMeshes = applyDebossBackTextToTagMeshes(tagMeshes, config)
@@ -3693,6 +3715,39 @@ function rebuildTag(): void {
     if (backLogoObject) {
       modelGroup.add(backLogoObject)
     }
+  }
+
+  return modelGroup
+}
+
+function createFlatTagObject(config: TagConfig): THREE.Group {
+  return createTagSurfaceObject(config)
+}
+
+function createTag3dObject(config: TagConfig): THREE.Group {
+  // Kept as a separate factory so Tag 3D can evolve without changing the
+  // existing flat-tag implementation. Both models intentionally match today.
+  return createTagSurfaceObject(config)
+}
+
+function rebuildTag(): void {
+  if (!loadedFont) {
+    return
+  }
+
+  const config = getConfigFromForm()
+  if (activeTagObject) {
+    scene.remove(activeTagObject)
+    disposeObjectDeep(activeTagObject)
+  }
+
+  const modelGroup = new THREE.Group()
+  if (config.modelType === 'dice') {
+    modelGroup.add(createDiceObject(config))
+  } else if (config.modelType === 'tag3d') {
+    modelGroup.add(createTag3dObject(config))
+  } else {
+    modelGroup.add(createFlatTagObject(config))
   }
 
   modelGroup.position.set(0, 0, 0)
@@ -3806,20 +3861,33 @@ function readLastState(): PersistedAppState | null {
   return {
     config: mergedConfig,
     fontChoice,
+    modelDrafts: parsed.modelDrafts,
   }
 }
 
 function saveLastState(): void {
   const selectedChoice = controlsMap.fontChoice.value as FontChoice
   const fontChoice = isBuiltinFontChoice(selectedChoice) ? selectedChoice : defaultFontChoice
+  const config = getConfigFromForm()
+  if (config.modelType === 'tag' || config.modelType === 'tag3d' || config.modelType === 'puzzle') {
+    modelDraftByType[config.modelType] = normalizeConfigForModel(config, config.modelType)
+  }
+
   const payload: PersistedAppState = {
-    config: getConfigFromForm(),
+    config,
     fontChoice,
+    modelDrafts: {
+      tag: modelDraftByType.tag,
+      tag3d: modelDraftByType.tag3d,
+      puzzle: modelDraftByType.puzzle,
+    },
   }
   saveLastStateToStorage(lastStateStorageKey, payload)
 }
 
-function normalizeConfigForModel(config: TagConfig, modelType: 'tag' | 'puzzle'): TagConfig {
+type TagDraftModelType = 'tag' | 'tag3d' | 'puzzle'
+
+function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType): TagConfig {
   if (modelType === 'puzzle') {
     const puzzleSize = clamp(config.width, 20, 120)
     return {
@@ -3834,14 +3902,16 @@ function normalizeConfigForModel(config: TagConfig, modelType: 'tag' | 'puzzle')
   const normalizedShape: TagShape = config.shape === 'puzzle' ? 'rounded' : config.shape
   return {
     ...config,
-    modelType: 'tag',
+    modelType,
     shape: normalizedShape,
     width: clamp(config.width, 20, 120),
     height: clamp(config.height, 15, 60),
+    thickness: clamp(config.thickness, 1.5, modelType === 'tag3d' ? 100 : 8),
+    holeDiameter: clamp(config.holeDiameter, modelType === 'tag3d' ? 0 : 2, 12),
   }
 }
 
-function captureConfigFromFormAsModel(modelType: 'tag' | 'puzzle'): TagConfig {
+function captureConfigFromFormAsModel(modelType: TagDraftModelType): TagConfig {
   const originalModelType = controlsMap.modelType.value as ModelType
   controlsMap.modelType.value = modelType
   const capturedConfig = getConfigFromForm()
@@ -3849,8 +3919,9 @@ function captureConfigFromFormAsModel(modelType: 'tag' | 'puzzle'): TagConfig {
   return normalizeConfigForModel(capturedConfig, modelType)
 }
 
-let modelDraftByType: Record<'tag' | 'puzzle', TagConfig> = {
+let modelDraftByType: Record<TagDraftModelType, TagConfig> = {
   tag: normalizeConfigForModel(defaultConfig, 'tag'),
+  tag3d: normalizeConfigForModel(defaultConfig, 'tag3d'),
   puzzle: normalizeConfigForModel(defaultConfig, 'puzzle'),
 }
 let currentModelTypeSelection: ModelType = defaultConfig.modelType
@@ -3986,11 +4057,11 @@ function wireEvents(): void {
     const nextModelType = controlsMap.modelType.value as ModelType
     const previousModelType = currentModelTypeSelection
 
-    if (previousModelType === 'tag' || previousModelType === 'puzzle') {
+    if (previousModelType === 'tag' || previousModelType === 'tag3d' || previousModelType === 'puzzle') {
       modelDraftByType[previousModelType] = captureConfigFromFormAsModel(previousModelType)
     }
 
-    if (nextModelType === 'tag' || nextModelType === 'puzzle') {
+    if (nextModelType === 'tag' || nextModelType === 'tag3d' || nextModelType === 'puzzle') {
       const nextConfig = normalizeConfigForModel(modelDraftByType[nextModelType], nextModelType)
       applyConfigToForm(nextConfig)
     } else {
@@ -4153,7 +4224,15 @@ function wireEvents(): void {
   controlsMap.exportBtn.addEventListener('click', downloadStl)
 
   controlsMap.resetBtn.addEventListener('click', () => {
-    applyConfigToForm(defaultConfig)
+    const activeModelType = controlsMap.modelType.value as ModelType
+    if (activeModelType === 'tag' || activeModelType === 'tag3d' || activeModelType === 'puzzle') {
+      const resetConfig = normalizeConfigForModel(defaultConfig, activeModelType)
+      modelDraftByType[activeModelType] = resetConfig
+      applyConfigToForm(resetConfig)
+    } else {
+      applyConfigToForm({ ...defaultConfig, modelType: activeModelType })
+    }
+    currentModelTypeSelection = activeModelType
     saveLastState()
     rebuildTag()
   })
@@ -4212,9 +4291,20 @@ async function start(): Promise<void> {
 
   const persistedState = readLastState()
   const initialConfig = persistedState ? persistedState.config : defaultConfig
+  const savedDrafts = persistedState?.modelDrafts
   modelDraftByType = {
-    tag: normalizeConfigForModel(initialConfig, 'tag'),
-    puzzle: normalizeConfigForModel(initialConfig, 'puzzle'),
+    tag: normalizeConfigForModel(
+      savedDrafts?.tag ?? (initialConfig.modelType === 'tag' ? initialConfig : defaultConfig),
+      'tag',
+    ),
+    tag3d: normalizeConfigForModel(
+      savedDrafts?.tag3d ?? (initialConfig.modelType === 'tag3d' ? initialConfig : defaultConfig),
+      'tag3d',
+    ),
+    puzzle: normalizeConfigForModel(
+      savedDrafts?.puzzle ?? (initialConfig.modelType === 'puzzle' ? initialConfig : defaultConfig),
+      'puzzle',
+    ),
   }
   applyConfigToForm(initialConfig)
   currentModelTypeSelection = initialConfig.modelType

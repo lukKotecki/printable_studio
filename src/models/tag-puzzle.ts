@@ -113,7 +113,7 @@ export function createBaseShape(config: TagConfig, deps: BaseShapeDeps): THREE.S
     shape = roundedRectShape(config.width, config.height, radius, deps.clamp)
   }
 
-  if (config.shape === 'puzzle') {
+  if (config.shape === 'puzzle' || (config.modelType === 'tag3d' && config.holeDiameter <= 0.001)) {
     return shape
   }
 
