@@ -32,11 +32,11 @@
   <entry key="tag.holeMargin">Margines otworu (mm)</entry>
   <entry key="tag.holeOffsetX">Przesuniecie otworu X (mm)</entry>
   <entry key="tag.holeOffsetY">Przesuniecie otworu Y (mm)</entry>
-  <entry key="tag.front.summary">Awers (gora)</entry>
+  <entry key="tag.front.summary">Rewers (dol)</entry>
   <entry key="tag.front.text">Napis</entry>
   <entry key="tag.text.placeholder">Wpisz kilka linii tekstu</entry>
-  <entry key="tag.front.textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</entry>
-  <entry key="tag.front.fontSize">Rozmiar tekstu awersu (mm)</entry>
+  <entry key="tag.front.textDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</entry>
+  <entry key="tag.front.fontSize">Rozmiar tekstu rewersu (mm)</entry>
   <entry key="text.bold">Pogrubienie tekstu</entry>
   <entry key="tag.front.logoEnabled">Dodaj logo SVG/PNG</entry>
   <entry key="tag.front.logoFile">Plik logo (SVG lub PNG)</entry>
@@ -45,10 +45,10 @@
   <entry key="tag.front.logoOffsetX">Przesuniecie logo X (mm)</entry>
   <entry key="tag.front.logoOffsetY">Przesuniecie logo Y (mm)</entry>
   <entry key="tag.front.logoRotation">Obrot logo (stopnie)</entry>
-  <entry key="tag.back.summary">Rewers (dol)</entry>
+  <entry key="tag.back.summary">Awers (gora)</entry>
   <entry key="tag.back.text">Napis</entry>
-  <entry key="tag.back.textDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</entry>
-  <entry key="tag.back.fontSize">Rozmiar tekstu rewersu (mm)</entry>
+  <entry key="tag.back.textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</entry>
+  <entry key="tag.back.fontSize">Rozmiar tekstu awersu (mm)</entry>
   <entry key="tag.back.logoEnabled">Dodaj logo SVG/PNG</entry>
   <entry key="tag.back.logoFile">Plik logo (SVG lub PNG)</entry>
   <entry key="tag.back.logoSize">Rozmiar logo (mm)</entry>
@@ -107,8 +107,8 @@
   <entry key="status.font.loadingCustom">Ladowanie: {name}</entry>
   <entry key="status.font.customLoaded">Wlasny font zaladowany: {name}</entry>
   <entry key="status.font.invalid">Niepoprawny plik fontu. Uzyj .ttf lub typeface.json.</entry>
-  <entry key="status.logo.front.select">Wybierz plik SVG lub PNG dla awersu.</entry>
-  <entry key="status.logo.back.select">Wybierz plik SVG lub PNG dla rewersu.</entry>
+  <entry key="status.logo.front.select">Wybierz plik SVG lub PNG dla rewersu.</entry>
+  <entry key="status.logo.back.select">Wybierz plik SVG lub PNG dla awersu.</entry>
   <entry key="status.logo.loading">Ladowanie logo: {name}</entry>
   <entry key="status.logo.loaded">Logo zaladowane: {name}</entry>
   <entry key="status.logo.invalid">Niepoprawny plik SVG/PNG albo brak czytelnego konturu.</entry>

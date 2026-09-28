@@ -223,7 +223,7 @@ app.innerHTML = `
         </details>
 
         <details class="dice-faces-panel" id="tagFrontPanel">
-          <summary>Awers (gora)</summary>
+          <summary>Rewers (dol)</summary>
 
           <div class="field">
             <label for="text">Napis</label>
@@ -231,12 +231,12 @@ app.innerHTML = `
           </div>
 
           <div class="field">
-            <label for="textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</label>
+            <label for="textDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</label>
             <input id="textDepth" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.textDepth}" />
           </div>
 
           <div class="field">
-            <label for="fontSize">Rozmiar tekstu awersu (mm)</label>
+            <label for="fontSize">Rozmiar tekstu rewersu (mm)</label>
             <input id="fontSize" type="number" min="4" max="22" step="0.5" value="${defaultConfig.fontSize}" />
           </div>
 
@@ -250,7 +250,7 @@ app.innerHTML = `
           <div class="field" id="logoFileWrap" style="display: none;">
             <label for="logoFile">Plik logo (SVG lub PNG)</label>
             <input id="logoFile" type="file" accept=".svg,.png,image/svg+xml,image/png" />
-            <small id="logoStatus">Wybierz plik SVG lub PNG dla awersu.</small>
+            <small id="logoStatus">Wybierz plik SVG lub PNG dla rewersu.</small>
           </div>
 
           <div class="grid-2" id="logoSettingsWrap" style="display: none;">
@@ -278,7 +278,7 @@ app.innerHTML = `
         </details>
 
         <details class="dice-faces-panel" id="tagBackPanel">
-          <summary>Rewers (dol)</summary>
+          <summary>Awers (gora)</summary>
 
           <div class="field">
             <label for="backText">Napis</label>
@@ -286,12 +286,12 @@ app.innerHTML = `
           </div>
 
           <div class="field">
-            <label for="backTextDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</label>
+            <label for="backTextDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</label>
             <input id="backTextDepth" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.backTextDepth}" />
           </div>
 
           <div class="field">
-            <label for="backFontSize">Rozmiar tekstu rewersu (mm)</label>
+            <label for="backFontSize">Rozmiar tekstu awersu (mm)</label>
             <input id="backFontSize" type="number" min="4" max="22" step="0.5" value="${defaultConfig.backFontSize}" />
           </div>
 
@@ -305,7 +305,7 @@ app.innerHTML = `
           <div class="field" id="backLogoFileWrap" style="display: none;">
             <label for="backLogoFile">Plik logo (SVG lub PNG)</label>
             <input id="backLogoFile" type="file" accept=".svg,.png,image/svg+xml,image/png" />
-            <small id="backLogoStatus">Wybierz plik SVG lub PNG dla rewersu.</small>
+            <small id="backLogoStatus">Wybierz plik SVG lub PNG dla awersu.</small>
           </div>
 
           <div class="grid-2" id="backLogoSettingsWrap" style="display: none;">
@@ -3751,6 +3751,9 @@ function rebuildTag(): void {
   }
 
   modelGroup.position.set(0, 0, 0)
+  if (config.modelType === 'tag' || config.modelType === 'tag3d') {
+    modelGroup.rotation.y = Math.PI
+  }
   activeTagObject = modelGroup
   scene.add(activeTagObject)
 }
