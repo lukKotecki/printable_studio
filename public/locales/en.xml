@@ -1,4 +1,6 @@
 <translations>
+  <entry key="status.geometry.error">Could not create a valid solid. Change the text, logo, or model settings; export has been disabled.</entry>
+  <entry key="status.geometry.initError">Could not initialize the geometry engine. Refresh the page and try again.</entry>
   <entry key="app.subtitle">Local 3D tag generator with STL export.</entry>
   <entry key="language.aria">Language</entry>
   <entry key="form.modelType">Model type</entry>

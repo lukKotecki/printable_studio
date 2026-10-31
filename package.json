@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test:geometry": "node scripts/test-tag-manifold.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "imagetracerjs": "^1.2.6",
+    "manifold-3d": "^3.5.4",
     "three": "^0.184.0",
     "three-csg-ts": "^3.2.0"
   }

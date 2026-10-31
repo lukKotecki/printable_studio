@@ -113,6 +113,10 @@ body {
   font-size: 0.95rem;
 }
 
+#geometryStatus {
+  color: #a03939;
+}
+
 .field {
   display: flex;
   flex-direction: column;

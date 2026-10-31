@@ -1,4 +1,6 @@
 <translations>
+  <entry key="status.geometry.error">Nie udalo sie utworzyc poprawnej bryly. Zmien tekst, logo lub parametry modelu; eksport zostal wylaczony.</entry>
+  <entry key="status.geometry.initError">Nie udalo sie uruchomic silnika geometrii. Odswiez strone i sprobuj ponownie.</entry>
   <entry key="app.subtitle">Lokalny generator tagow 3D z eksportem STL.</entry>
   <entry key="language.aria">Jezzyk</entry>
   <entry key="form.modelType">Typ modelu</entry>

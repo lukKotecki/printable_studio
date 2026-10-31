@@ -31,6 +31,7 @@ Demo online: https://studio.mojestrony.pl
 - Vite
 - Three.js
 - three-csg-ts
+- manifold-3d (operacje na brylach tagow)
 
 ## Uruchomienie lokalne
 
@@ -49,6 +50,14 @@ npm run preview
 ```
 
 Build produkcyjny generowany jest przez Vite i zapisuje pliki wynikowe w katalogu `dist/`.
+
+## Test geometrii tagow
+
+```bash
+npm run test:geometry
+```
+
+Test wymaga Node.js 24 lub nowszego. Sprawdza szczelnosc i orientacje krawedzi STL oraz glebokosc graweru na obu stronach tagu. Jesli nie uda sie zbudowac poprawnej bryly tagu, aplikacja wyswietla blad i blokuje eksport zamiast pomijac grawer.
 
 ## Struktura projektu
 

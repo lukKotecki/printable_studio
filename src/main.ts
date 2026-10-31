@@ -10,6 +10,8 @@ import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { CSG } from 'three-csg-ts'
+import createManifold, { type ManifoldToplevel } from 'manifold-3d'
+import manifoldWasmUrl from 'manifold-3d/manifold.wasm?url'
 import {
   builtinFontUrls,
   defaultConfig,
@@ -31,6 +33,7 @@ import {
   type TagConfig,
 } from './config/app-config'
 import { isDiceSubtractResultStable } from './models/dice-analysis'
+import { subtractSolidMeshes } from './models/manifold-boolean'
 import {
   createBaseMesh as createTagPuzzleBaseMesh,
   createBaseShape as createTagPuzzleBaseShape,
@@ -92,6 +95,7 @@ app.innerHTML = `
         <button id="resetBtn" type="button">Reset</button>
         <button id="exportBtn" type="button" class="primary">Eksport STL</button>
       </div>
+      <small id="geometryStatus" role="alert" hidden></small>
 
       <details class="dice-faces-panel" id="diceParamsPanel">
         <summary>Parametry kosci</summary>
@@ -866,6 +870,8 @@ let currentLanguage: LanguageCode = defaultLanguage
 let translations: Record<string, string> = {}
 const localeCache: Partial<Record<LanguageCode, Record<string, string>>> = {}
 let fontStatusState: StatusState = { key: 'status.font.select', isError: false }
+let manifoldEngine: ManifoldToplevel | null = null
+let geometryStatusKey: 'status.geometry.error' | 'status.geometry.initError' | null = null
 let logoStatusState: StatusState = { key: 'status.logo.front.select', isError: false }
 let backLogoStatusState: StatusState = { key: 'status.logo.back.select', isError: false }
 const diceFaceLogoStatusState: Record<number, StatusState> = {
@@ -961,6 +967,9 @@ function refreshStatusTexts(): void {
   renderStatus(controlsMap.fontStatus, fontStatusState)
   renderStatus(controlsMap.logoStatus, logoStatusState)
   renderStatus(controlsMap.backLogoStatus, backLogoStatusState)
+  if (geometryStatusKey) {
+    requiredElement<HTMLElement>('#geometryStatus').textContent = t(geometryStatusKey)
+  }
 
   const statusMap: Record<number, HTMLElement> = {
     1: controlsMap.diceFaceLogoStatus1,
@@ -3673,8 +3682,72 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
   }
 }
 
+function createManifoldTagBase(config: TagConfig): THREE.Mesh {
+  if (!manifoldEngine) {
+    throw new Error('Manifold geometry engine is not initialized')
+  }
+
+  let base = createBaseMesh(config)
+  const frontCutters: THREE.Mesh[] = []
+  const remainingCutters: THREE.Mesh[] = []
+  const bridges: THREE.Mesh[] = []
+  try {
+    if (config.textDepth < -0.001) {
+      const depth = Math.abs(config.textDepth)
+      createLaidOutTextGeometries(config, depth + 0.2).forEach((geometry) => {
+        const cutter = new THREE.Mesh(geometry, baseMaterial)
+        cutter.position.z = config.thickness - depth
+        frontCutters.push(cutter)
+      })
+      if (depth >= config.thickness - 0.001) {
+        bridges.push(...createThroughCutBridges(config))
+      }
+    }
+
+    const frontLogo = createTagLogoCutters(config)
+    frontLogo.forEach((cutter) => { cutter.position.z += 0.1 })
+    const backText = createBackTextCutters(config)
+    backText.forEach((cutter) => { cutter.position.z -= 0.1 })
+    const backLogo = createBackLogoCutters(config)
+    backLogo.forEach((cutter) => { cutter.position.z -= 0.1 })
+    remainingCutters.push(...frontLogo, ...backText, ...backLogo)
+
+    if (frontCutters.length > 0) {
+      const next = subtractSolidMeshes(manifoldEngine, base, frontCutters, bridges)
+      base.geometry.dispose()
+      base = next
+    }
+    if (remainingCutters.length > 0) {
+      const next = subtractSolidMeshes(manifoldEngine, base, remainingCutters)
+      base.geometry.dispose()
+      base = next
+    }
+    return base
+  } catch (error) {
+    base.geometry.dispose()
+    throw error
+  } finally {
+    for (const mesh of [...frontCutters, ...remainingCutters, ...bridges]) {
+      mesh.geometry.dispose()
+    }
+  }
+}
+
 function createTagSurfaceObject(config: TagConfig): THREE.Group {
   const modelGroup = new THREE.Group()
+  if (config.modelType === 'tag' || config.modelType === 'tag3d') {
+    modelGroup.add(createManifoldTagBase(config))
+    const details = [
+      config.textDepth > 0 ? createEmbossTextMesh(config) : null,
+      createBackTextObject(config),
+      createTagLogoObject(config),
+      createBackLogoObject(config),
+    ]
+    details.forEach((detail) => {
+      if (detail) modelGroup.add(detail)
+    })
+    return modelGroup
+  }
   if (config.textDepth < 0) {
     let tagMeshes = createDebossMeshes(config)
     tagMeshes = applyDebossLogoToTagMeshes(tagMeshes, config)
@@ -3739,16 +3812,31 @@ function rebuildTag(): void {
   if (activeTagObject) {
     scene.remove(activeTagObject)
     disposeObjectDeep(activeTagObject)
+    activeTagObject = null
   }
 
   const modelGroup = new THREE.Group()
-  if (config.modelType === 'dice') {
-    modelGroup.add(createDiceObject(config))
-  } else if (config.modelType === 'tag3d') {
-    modelGroup.add(createTag3dObject(config))
-  } else {
-    modelGroup.add(createFlatTagObject(config))
+  const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
+  try {
+    if (config.modelType === 'dice') {
+      modelGroup.add(createDiceObject(config))
+    } else if (config.modelType === 'tag3d') {
+      modelGroup.add(createTag3dObject(config))
+    } else {
+      modelGroup.add(createFlatTagObject(config))
+    }
+  } catch (error) {
+    console.error('Failed to build model geometry:', error)
+    disposeObjectDeep(modelGroup)
+    geometryStatusKey = 'status.geometry.error'
+    geometryStatus.textContent = t(geometryStatusKey)
+    geometryStatus.hidden = false
+    controlsMap.exportBtn.disabled = true
+    return
   }
+  geometryStatusKey = null
+  geometryStatus.hidden = true
+  controlsMap.exportBtn.disabled = false
 
   modelGroup.position.set(0, 0, 0)
   if (config.modelType === 'tag' || config.modelType === 'tag3d') {
@@ -4319,6 +4407,18 @@ async function start(): Promise<void> {
   wirePanelResize()
   wireEvents()
   await setLanguage(readSavedLanguage(), false)
+  try {
+    manifoldEngine = await createManifold({ locateFile: () => manifoldWasmUrl })
+    manifoldEngine.setup()
+  } catch (error) {
+    console.error('Failed to initialize geometry engine:', error)
+    const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
+    geometryStatusKey = 'status.geometry.initError'
+    geometryStatus.textContent = t(geometryStatusKey)
+    geometryStatus.hidden = false
+    controlsMap.exportBtn.disabled = true
+    return
+  }
   resizeRenderer()
   animate()
   updateModelControlsVisibility()
@@ -4331,5 +4431,3 @@ async function start(): Promise<void> {
 }
 
 void start()
-
-
