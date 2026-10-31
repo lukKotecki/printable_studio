@@ -3,12 +3,11 @@ import { readFile } from 'node:fs/promises'
 import * as THREE from 'three'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
-import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import createManifold from 'manifold-3d'
 import { subtractSolidMeshes } from '../src/models/manifold-boolean.ts'
 import { createBaseMesh } from '../src/models/tag-puzzle.ts'
 import { defaultConfig } from '../src/config/app-config.ts'
+import { assertClosedStl, volume } from './mesh-test-utils.mjs'
 
 const engine = await createManifold()
 engine.setup()
@@ -30,46 +29,6 @@ function textCutter(text, depth, thickness, back = false, typeface = font) {
     mesh.position.z = thickness - depth
   }
   return mesh
-}
-
-function volume(geometry) {
-  const position = geometry.getAttribute('position')
-  const index = geometry.getIndex()
-  const count = index ? index.count : position.count
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3()
-  let total = 0
-  for (let i = 0; i < count; i += 3) {
-    a.fromBufferAttribute(position, index ? index.getX(i) : i)
-    b.fromBufferAttribute(position, index ? index.getX(i + 1) : i + 1)
-    c.fromBufferAttribute(position, index ? index.getX(i + 2) : i + 2)
-    total += a.dot(b.cross(c)) / 6
-  }
-  return total
-}
-
-function assertClosedStl(mesh) {
-  const data = new STLExporter().parse(mesh, { binary: true })
-  const geometry = new STLLoader().parse(data.buffer)
-  const position = geometry.getAttribute('position')
-  const edges = new Map()
-  const key = (i) => [position.getX(i), position.getY(i), position.getZ(i)].map((n) => Object.is(n, -0) ? 0 : n).join(',')
-  for (let i = 0; i < position.count; i += 3) {
-    const points = [key(i), key(i + 1), key(i + 2)]
-    assert.equal(new Set(points).size, 3, 'degenerate triangle in STL')
-    for (let j = 0; j < 3; j += 1) {
-      const a = points[j], b = points[(j + 1) % 3]
-      const edge = a < b ? `${a}|${b}` : `${b}|${a}`
-      const entry = edges.get(edge) ?? [0, 0]
-      entry[0] += 1
-      entry[1] += a < b ? 1 : -1
-      edges.set(edge, entry)
-    }
-  }
-  for (const [edge, [count, direction]] of edges) {
-    assert.equal(count, 2, `open or non-manifold edge ${edge}`)
-    assert.equal(direction, 0, `incorrect winding at ${edge}`)
-  }
-  geometry.dispose()
 }
 
 for (const shape of ['rounded', 'circle', 'capsule']) {

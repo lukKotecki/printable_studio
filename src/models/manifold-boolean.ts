@@ -114,14 +114,25 @@ export function subtractSolidMeshes(
   base: THREE.Mesh,
   cutters: THREE.Mesh[],
   additions: THREE.Mesh[] = [],
+  solidCutters: THREE.Mesh[] = [],
+  intersections: THREE.Mesh[] = [],
 ): THREE.Mesh {
   let solid = toSolid(engine, base)
   try {
-    for (const [meshes, subtract] of [[cutters, true], [additions, false]] as const) {
+    for (const [meshes, operation] of [
+      [solidCutters, 'subtract'],
+      [cutters, 'subtract-extrusion'],
+      [additions, 'add'],
+      [intersections, 'intersect'],
+    ] as const) {
       for (const mesh of meshes) {
-        const operand = subtract ? extrudedCutterToSolid(engine, mesh) : toSolid(engine, mesh)
+        const operand = operation === 'subtract-extrusion' ? extrudedCutterToSolid(engine, mesh) : toSolid(engine, mesh)
         try {
-          const next = subtract ? solid.subtract(operand) : solid.add(operand)
+          const next = operation === 'intersect'
+            ? solid.intersect(operand)
+            : operation === 'add'
+              ? solid.add(operand)
+              : solid.subtract(operand)
           solid.delete()
           solid = next
         } finally {

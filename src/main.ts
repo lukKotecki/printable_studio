@@ -2487,12 +2487,13 @@ function createLogoGeometries(
   depth: number,
   curveSegments = 28,
   transform: LogoTransformOptions = {},
+  maxDepth = 8,
 ): THREE.ExtrudeGeometry[] {
   if (shapes.length === 0) {
     return []
   }
 
-  const extrudeDepth = clamp(Math.abs(depth), 0.2, 8)
+  const extrudeDepth = clamp(Math.abs(depth), 0.2, maxDepth)
   const scale = clamp(size, 2, 40)
   const offsetX = clamp(transform.offsetX ?? 0, -80, 80)
   const offsetY = clamp(transform.offsetY ?? 0, -80, 80)
@@ -3199,6 +3200,28 @@ function applySphereClippingToDice(
   }
 }
 
+function getDiceFaceDefinitions(config: TagConfig): Array<{
+    face: number
+    textEnabled: boolean
+    logoEnabled: boolean
+    text: string
+    depth: number
+    fontSize: number
+    logoSize: number
+    logoDepth: number
+    normal: THREE.Vector3
+    rotation: THREE.Euler
+  }> {
+  return [
+    { face: 1, textEnabled: config.diceFaceTextEnabled1, logoEnabled: config.diceFaceLogoEnabled1, text: config.diceFace1, depth: config.diceFaceDepth1, fontSize: config.diceFaceFontSize1, logoSize: config.diceFaceLogoSize1, logoDepth: config.diceFaceLogoDepth1, normal: new THREE.Vector3(0, 0, 1), rotation: new THREE.Euler(0, 0, 0) },
+    { face: 2, textEnabled: config.diceFaceTextEnabled2, logoEnabled: config.diceFaceLogoEnabled2, text: config.diceFace2, depth: config.diceFaceDepth2, fontSize: config.diceFaceFontSize2, logoSize: config.diceFaceLogoSize2, logoDepth: config.diceFaceLogoDepth2, normal: new THREE.Vector3(0, 0, -1), rotation: new THREE.Euler(0, Math.PI, 0) },
+    { face: 3, textEnabled: config.diceFaceTextEnabled3, logoEnabled: config.diceFaceLogoEnabled3, text: config.diceFace3, depth: config.diceFaceDepth3, fontSize: config.diceFaceFontSize3, logoSize: config.diceFaceLogoSize3, logoDepth: config.diceFaceLogoDepth3, normal: new THREE.Vector3(1, 0, 0), rotation: new THREE.Euler(0, Math.PI / 2, 0) },
+    { face: 4, textEnabled: config.diceFaceTextEnabled4, logoEnabled: config.diceFaceLogoEnabled4, text: config.diceFace4, depth: config.diceFaceDepth4, fontSize: config.diceFaceFontSize4, logoSize: config.diceFaceLogoSize4, logoDepth: config.diceFaceLogoDepth4, normal: new THREE.Vector3(-1, 0, 0), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
+    { face: 5, textEnabled: config.diceFaceTextEnabled5, logoEnabled: config.diceFaceLogoEnabled5, text: config.diceFace5, depth: config.diceFaceDepth5, fontSize: config.diceFaceFontSize5, logoSize: config.diceFaceLogoSize5, logoDepth: config.diceFaceLogoDepth5, normal: new THREE.Vector3(0, 1, 0), rotation: new THREE.Euler(-Math.PI / 2, 0, 0) },
+    { face: 6, textEnabled: config.diceFaceTextEnabled6, logoEnabled: config.diceFaceLogoEnabled6, text: config.diceFace6, depth: config.diceFaceDepth6, fontSize: config.diceFaceFontSize6, logoSize: config.diceFaceLogoSize6, logoDepth: config.diceFaceLogoDepth6, normal: new THREE.Vector3(0, -1, 0), rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI) },
+  ].filter((face) => isDiceFaceActiveForConfig(face.face, config))
+}
+
 function createDiceObject(config: TagConfig): THREE.Object3D {
   const size = config.diceSize
   const maxRoundness = size * 0.18
@@ -3228,25 +3251,7 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
     baseMesh.userData.previewRole = 'cube'
   }
 
-  const faceDefs: Array<{
-    face: number
-    textEnabled: boolean
-    logoEnabled: boolean
-    text: string
-    depth: number
-    fontSize: number
-    logoSize: number
-    logoDepth: number
-    normal: THREE.Vector3
-    rotation: THREE.Euler
-  }> = [
-    { face: 1, textEnabled: config.diceFaceTextEnabled1, logoEnabled: config.diceFaceLogoEnabled1, text: config.diceFace1, depth: config.diceFaceDepth1, fontSize: config.diceFaceFontSize1, logoSize: config.diceFaceLogoSize1, logoDepth: config.diceFaceLogoDepth1, normal: new THREE.Vector3(0, 0, 1), rotation: new THREE.Euler(0, 0, 0) },
-    { face: 2, textEnabled: config.diceFaceTextEnabled2, logoEnabled: config.diceFaceLogoEnabled2, text: config.diceFace2, depth: config.diceFaceDepth2, fontSize: config.diceFaceFontSize2, logoSize: config.diceFaceLogoSize2, logoDepth: config.diceFaceLogoDepth2, normal: new THREE.Vector3(0, 0, -1), rotation: new THREE.Euler(0, Math.PI, 0) },
-    { face: 3, textEnabled: config.diceFaceTextEnabled3, logoEnabled: config.diceFaceLogoEnabled3, text: config.diceFace3, depth: config.diceFaceDepth3, fontSize: config.diceFaceFontSize3, logoSize: config.diceFaceLogoSize3, logoDepth: config.diceFaceLogoDepth3, normal: new THREE.Vector3(1, 0, 0), rotation: new THREE.Euler(0, Math.PI / 2, 0) },
-    { face: 4, textEnabled: config.diceFaceTextEnabled4, logoEnabled: config.diceFaceLogoEnabled4, text: config.diceFace4, depth: config.diceFaceDepth4, fontSize: config.diceFaceFontSize4, logoSize: config.diceFaceLogoSize4, logoDepth: config.diceFaceLogoDepth4, normal: new THREE.Vector3(-1, 0, 0), rotation: new THREE.Euler(0, -Math.PI / 2, 0) },
-    { face: 5, textEnabled: config.diceFaceTextEnabled5, logoEnabled: config.diceFaceLogoEnabled5, text: config.diceFace5, depth: config.diceFaceDepth5, fontSize: config.diceFaceFontSize5, logoSize: config.diceFaceLogoSize5, logoDepth: config.diceFaceLogoDepth5, normal: new THREE.Vector3(0, 1, 0), rotation: new THREE.Euler(-Math.PI / 2, 0, 0) },
-    { face: 6, textEnabled: config.diceFaceTextEnabled6, logoEnabled: config.diceFaceLogoEnabled6, text: config.diceFace6, depth: config.diceFaceDepth6, fontSize: config.diceFaceFontSize6, logoSize: config.diceFaceLogoSize6, logoDepth: config.diceFaceLogoDepth6, normal: new THREE.Vector3(0, -1, 0), rotation: new THREE.Euler(Math.PI / 2, 0, Math.PI) },
-  ].filter((face) => isDiceFaceActiveForConfig(face.face, config))
+  const faceDefs = getDiceFaceDefinitions(config)
 
   const availableTextArea = size * 0.62
   const embossMeshes: THREE.Mesh[] = []
@@ -3451,6 +3456,86 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
 
   setDicePreviewVisibility(group, config)
   return group
+}
+
+function createExportDiceObject(config: TagConfig): THREE.Group {
+  if (!manifoldEngine) {
+    throw new Error('Manifold geometry engine is not initialized')
+  }
+
+  const size = config.diceSize
+  const roundness = clamp(config.diceRoundness, 0, size * 0.18)
+  const sideHoleDiameter = clamp(config.diceSideHoleDiameter, 0, getMaxDiceSideHoleDiameter(size))
+  const base = new THREE.Mesh(new RoundedBoxGeometry(size, size, size, 4, roundness), baseMaterial)
+  const group = new THREE.Group()
+  const cutters: THREE.Mesh[] = []
+  const solidCutters: THREE.Mesh[] = []
+  const intersections: THREE.Mesh[] = []
+
+  try {
+    if (sideHoleDiameter > 0.001) {
+      const hole = new THREE.Mesh(
+        new THREE.CylinderGeometry(sideHoleDiameter / 2, sideHoleDiameter / 2, size + 2, 48),
+        baseMaterial,
+      )
+      hole.rotation.z = Math.PI / 2
+      solidCutters.push(hole)
+    }
+
+    const availableTextArea = size * 0.62
+    for (const face of getDiceFaceDefinitions(config)) {
+      const addGeometries = (geometries: THREE.BufferGeometry[], depth: number, visible: boolean): void => {
+        for (const geometry of geometries) {
+          const mesh = new THREE.Mesh(geometry, depth < 0 ? baseMaterial : detailMaterial)
+          mesh.rotation.copy(face.rotation)
+          mesh.position.copy(face.normal).multiplyScalar(depth < 0 ? size / 2 - Math.abs(depth) : size / 2 - 0.02)
+          if (depth < 0) {
+            cutters.push(mesh)
+          } else if (visible) {
+            group.add(mesh)
+          } else {
+            geometry.dispose()
+          }
+        }
+      }
+
+      const textDepth = clamp(face.depth, -20, 20)
+      if (face.textEnabled && Math.abs(textDepth) >= 0.001) {
+        const depth = Math.abs(textDepth) + (textDepth < 0 ? 0.2 : 0)
+        const fontSize = clamp(face.fontSize, 2, availableTextArea)
+        addGeometries(createCenteredTextGeometries(face.text, fontSize, depth, config.textBold), textDepth, config.diceShowText)
+      }
+
+      const logoDepth = clamp(face.logoDepth, -8, 8)
+      if (face.logoEnabled && Math.abs(logoDepth) >= 0.001) {
+        const shapes = getDiceFaceLogoShapes(face.face)
+        const depth = Math.abs(logoDepth) + (logoDepth < 0 ? 0.2 : 0)
+        const logoSize = clamp(face.logoSize, 2, availableTextArea)
+        const segments = logoDepth < 0 ? 28 : 18
+        addGeometries(createLogoGeometries(shapes, logoSize, depth, segments, {}, 8.2), logoDepth, true)
+      }
+    }
+
+    if (config.diceClipWithSphere && config.diceSphereRadius > 0) {
+      intersections.push(new THREE.Mesh(new THREE.SphereGeometry(config.diceSphereRadius, 64, 32), baseMaterial))
+    }
+
+    if (config.diceShowCube) {
+      group.add(subtractSolidMeshes(manifoldEngine, base, cutters, [], solidCutters, intersections))
+    }
+    if (group.children.length === 0) {
+      throw new Error('No visible dice geometry to export')
+    }
+    return group
+  } catch (error) {
+    disposeObjectDeep(group)
+    throw error
+  } finally {
+    base.geometry.dispose()
+    for (const mesh of [...cutters, ...solidCutters, ...intersections]) {
+      mesh.geometry.dispose()
+    }
+  }
 }
 
 function pathFromPoints(points: THREE.Vector2[]): THREE.Path {
@@ -3852,7 +3937,7 @@ function rebuildTag(): void {
 }
 
 function updateExportAvailability(config: TagConfig): void {
-  const needsManifold = config.modelType === 'tag' || config.modelType === 'tag3d'
+  const needsManifold = config.modelType === 'tag' || config.modelType === 'tag3d' || config.modelType === 'dice'
   const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
   if (!activeTagObject && geometryStatusKey === 'status.geometry.error') {
     geometryStatus.textContent = t(geometryStatusKey)
@@ -3901,6 +3986,8 @@ function downloadStl(): void {
   try {
     if (config.modelType === 'tag' || config.modelType === 'tag3d') {
       exportGroup.add(createExportTagObject(config))
+    } else if (config.modelType === 'dice') {
+      exportGroup.add(createExportDiceObject(config))
     } else {
       activeTagObject.updateMatrixWorld(true)
       activeTagObject.traverse((child) => {

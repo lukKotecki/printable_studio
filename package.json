@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test:geometry": "node scripts/test-tag-manifold.mjs",
+    "test:geometry": "node scripts/test-tag-manifold.mjs && node scripts/test-dice-manifold.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {
