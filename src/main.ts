@@ -871,6 +871,7 @@ let translations: Record<string, string> = {}
 const localeCache: Partial<Record<LanguageCode, Record<string, string>>> = {}
 let fontStatusState: StatusState = { key: 'status.font.select', isError: false }
 let manifoldEngine: ManifoldToplevel | null = null
+let manifoldInitializationFailed = false
 let geometryStatusKey: 'status.geometry.error' | 'status.geometry.initError' | null = null
 let logoStatusState: StatusState = { key: 'status.logo.front.select', isError: false }
 let backLogoStatusState: StatusState = { key: 'status.logo.back.select', isError: false }
@@ -3735,19 +3736,6 @@ function createManifoldTagBase(config: TagConfig): THREE.Mesh {
 
 function createTagSurfaceObject(config: TagConfig): THREE.Group {
   const modelGroup = new THREE.Group()
-  if (config.modelType === 'tag' || config.modelType === 'tag3d') {
-    modelGroup.add(createManifoldTagBase(config))
-    const details = [
-      config.textDepth > 0 ? createEmbossTextMesh(config) : null,
-      createBackTextObject(config),
-      createTagLogoObject(config),
-      createBackLogoObject(config),
-    ]
-    details.forEach((detail) => {
-      if (detail) modelGroup.add(detail)
-    })
-    return modelGroup
-  }
   if (config.textDepth < 0) {
     let tagMeshes = createDebossMeshes(config)
     tagMeshes = applyDebossLogoToTagMeshes(tagMeshes, config)
@@ -3793,6 +3781,25 @@ function createTagSurfaceObject(config: TagConfig): THREE.Group {
   return modelGroup
 }
 
+function createExportTagObject(config: TagConfig): THREE.Group {
+  const modelGroup = new THREE.Group()
+  try {
+    modelGroup.add(createManifoldTagBase(config))
+    const addDetail = (detail: THREE.Object3D | null): void => {
+      if (detail) modelGroup.add(detail)
+    }
+    if (config.textDepth > 0) addDetail(createEmbossTextMesh(config))
+    addDetail(createBackTextObject(config))
+    addDetail(createTagLogoObject(config))
+    addDetail(createBackLogoObject(config))
+    modelGroup.rotation.y = Math.PI
+    return modelGroup
+  } catch (error) {
+    disposeObjectDeep(modelGroup)
+    throw error
+  }
+}
+
 function createFlatTagObject(config: TagConfig): THREE.Group {
   return createTagSurfaceObject(config)
 }
@@ -3834,9 +3841,6 @@ function rebuildTag(): void {
     controlsMap.exportBtn.disabled = true
     return
   }
-  geometryStatusKey = null
-  geometryStatus.hidden = true
-  controlsMap.exportBtn.disabled = false
 
   modelGroup.position.set(0, 0, 0)
   if (config.modelType === 'tag' || config.modelType === 'tag3d') {
@@ -3844,6 +3848,24 @@ function rebuildTag(): void {
   }
   activeTagObject = modelGroup
   scene.add(activeTagObject)
+  updateExportAvailability(config)
+}
+
+function updateExportAvailability(config: TagConfig): void {
+  const needsManifold = config.modelType === 'tag' || config.modelType === 'tag3d'
+  const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
+  if (!activeTagObject && geometryStatusKey === 'status.geometry.error') {
+    geometryStatus.textContent = t(geometryStatusKey)
+    geometryStatus.hidden = false
+  } else if (needsManifold && manifoldInitializationFailed) {
+    geometryStatusKey = 'status.geometry.initError'
+    geometryStatus.textContent = t(geometryStatusKey)
+    geometryStatus.hidden = false
+  } else {
+    geometryStatusKey = null
+    geometryStatus.hidden = true
+  }
+  controlsMap.exportBtn.disabled = !activeTagObject || (needsManifold && !manifoldEngine)
 }
 
 function resizeRenderer(): void {
@@ -3875,34 +3897,41 @@ function downloadStl(): void {
   const exporter = new STLExporter()
   const config = getConfigFromForm()
   const exportGroup = new THREE.Group()
+  let data: DataView
+  try {
+    if (config.modelType === 'tag' || config.modelType === 'tag3d') {
+      exportGroup.add(createExportTagObject(config))
+    } else {
+      activeTagObject.updateMatrixWorld(true)
+      activeTagObject.traverse((child) => {
+        const mesh = child as THREE.Mesh
+        const previewRole = (child.userData as { previewRole?: string }).previewRole
+        if (!mesh.isMesh || !mesh.visible || previewRole === 'sphere') {
+          return
+        }
 
-  activeTagObject.updateMatrixWorld(true)
-  activeTagObject.traverse((child) => {
-    const mesh = child as THREE.Mesh
-    const previewRole = (child.userData as { previewRole?: string }).previewRole
-    if (!mesh.isMesh || !mesh.visible || previewRole === 'sphere') {
-      return
+        const exportGeometry = mesh.geometry.clone()
+        exportGeometry.applyMatrix4(mesh.matrixWorld)
+        const exportMesh = new THREE.Mesh(exportGeometry, mesh.material)
+        exportGroup.add(exportMesh)
+      })
     }
-
-    const exportGeometry = mesh.geometry.clone()
-    exportGeometry.applyMatrix4(mesh.matrixWorld)
-    const exportMesh = new THREE.Mesh(exportGeometry, mesh.material)
-    exportGroup.add(exportMesh)
-  })
-
-  if (exportGroup.children.length === 0) {
+    if (exportGroup.children.length === 0) {
+      throw new Error('No geometry to export')
+    }
+    exportGroup.updateMatrixWorld(true)
+    data = exporter.parse(exportGroup, { binary: true }) as DataView
+  } catch (error) {
+    console.error('Failed to build export geometry:', error)
+    geometryStatusKey = 'status.geometry.error'
+    const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
+    geometryStatus.textContent = t(geometryStatusKey)
+    geometryStatus.hidden = false
+    controlsMap.exportBtn.disabled = true
     return
+  } finally {
+    disposeObjectDeep(exportGroup)
   }
-
-  exportGroup.updateMatrixWorld(true)
-  const data = exporter.parse(exportGroup, { binary: true }) as DataView
-
-  exportGroup.traverse((child) => {
-    const mesh = child as THREE.Mesh
-    if (mesh.isMesh) {
-      mesh.geometry.dispose()
-    }
-  })
 
   const binaryStl = new Uint8Array(data.byteLength)
   binaryStl.set(new Uint8Array(data.buffer, data.byteOffset, data.byteLength))
@@ -4407,18 +4436,6 @@ async function start(): Promise<void> {
   wirePanelResize()
   wireEvents()
   await setLanguage(readSavedLanguage(), false)
-  try {
-    manifoldEngine = await createManifold({ locateFile: () => manifoldWasmUrl })
-    manifoldEngine.setup()
-  } catch (error) {
-    console.error('Failed to initialize geometry engine:', error)
-    const geometryStatus = requiredElement<HTMLElement>('#geometryStatus')
-    geometryStatusKey = 'status.geometry.initError'
-    geometryStatus.textContent = t(geometryStatusKey)
-    geometryStatus.hidden = false
-    controlsMap.exportBtn.disabled = true
-    return
-  }
   resizeRenderer()
   animate()
   updateModelControlsVisibility()
@@ -4428,6 +4445,16 @@ async function start(): Promise<void> {
   const initialFontChoice = controlsMap.fontChoice.value as FontChoice
   const fontToLoad = isBuiltinFontChoice(initialFontChoice) ? initialFontChoice : defaultFontChoice
   void applyBuiltinFont(fontToLoad)
+  try {
+    manifoldEngine = await createManifold({ locateFile: () => manifoldWasmUrl })
+    manifoldEngine.setup()
+  } catch (error) {
+    manifoldEngine = null
+    manifoldInitializationFailed = true
+    console.error('Failed to initialize geometry engine:', error)
+    geometryStatusKey = 'status.geometry.initError'
+  }
+  updateExportAvailability(getConfigFromForm())
 }
 
 void start()
