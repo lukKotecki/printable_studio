@@ -5,7 +5,7 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import createManifold from 'manifold-3d'
 import { subtractSolidMeshes } from '../src/models/manifold-boolean.ts'
-import { createBaseMesh } from '../src/models/tag-puzzle.ts'
+import { createBaseMesh, createBaseShape } from '../src/models/tag-puzzle.ts'
 import { defaultConfig } from '../src/config/app-config.ts'
 import { assertClosedStl, volume } from './mesh-test-utils.mjs'
 
@@ -15,6 +15,15 @@ const font = new FontLoader().parse(JSON.parse(await readFile('public/fonts/helv
 const material = new THREE.MeshBasicMaterial()
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 const shapeFromPoints = (points) => new THREE.Shape(points)
+const shapeDeps = { clamp, shapeFromPoints }
+
+assert.equal(defaultConfig.holeDiameter, 4.5, 'default hole diameter should be 4.5 mm')
+assert.equal(createBaseShape(defaultConfig, shapeDeps).holes.length, 1, 'default tag should have a hole')
+assert.equal(
+  createBaseShape({ ...defaultConfig, holeDiameter: 0 }, shapeDeps).holes.length,
+  0,
+  'zero hole diameter should disable the hole',
+)
 
 function textCutter(text, depth, thickness, back = false, typeface = font) {
   const geometry = new TextGeometry(text, { font: typeface, size: 9, depth: depth + 0.2, curveSegments: 18, bevelEnabled: false })

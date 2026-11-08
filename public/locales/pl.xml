@@ -4,8 +4,8 @@
   <entry key="app.subtitle">Lokalny generator tagow 3D z eksportem STL.</entry>
   <entry key="language.aria">Jezzyk</entry>
   <entry key="form.modelType">Typ modelu</entry>
-  <entry key="model.tag">Plaski tag</entry>
-  <entry key="model.tag3d">Tag 3D</entry>
+  <entry key="model.tag">Tag dwustronny</entry>
+  <entry key="model.tag3d">Tag jednostronny</entry>
   <entry key="model.puzzle">Puzzle (beta)</entry>
   <entry key="model.dice">Kostka K6 (beta)</entry>
   <entry key="form.font">Font</entry>
@@ -30,7 +30,7 @@
   <entry key="tag.height">Wysokosc (mm)</entry>
   <entry key="tag.thickness">Grubosc (mm)</entry>
   <entry key="tag.cornerRadius">Promien rogu (mm)</entry>
-  <entry key="tag.holeDiameter">Srednica otworu (mm)</entry>
+  <entry key="tag.holeDiameter">Srednica otworu (mm, 0 = brak)</entry>
   <entry key="tag.holeMargin">Margines otworu (mm)</entry>
   <entry key="tag.holeOffsetX">Przesuniecie otworu X (mm)</entry>
   <entry key="tag.holeOffsetY">Przesuniecie otworu Y (mm)</entry>
@@ -39,6 +39,8 @@
   <entry key="tag.text.placeholder">Wpisz kilka linii tekstu</entry>
   <entry key="tag.front.textDepth">Glebokosc tekstu rewersu (mm, ujemna = wklesly)</entry>
   <entry key="tag.front.fontSize">Rozmiar tekstu rewersu (mm)</entry>
+  <entry key="tag.front.textOffsetX">Przesuniecie napisu X (mm)</entry>
+  <entry key="tag.front.textOffsetY">Przesuniecie napisu Y (mm)</entry>
   <entry key="text.bold">Pogrubienie tekstu</entry>
   <entry key="tag.front.logoEnabled">Dodaj logo SVG/PNG</entry>
   <entry key="tag.front.logoFile">Plik logo (SVG lub PNG)</entry>
@@ -51,6 +53,8 @@
   <entry key="tag.back.text">Napis</entry>
   <entry key="tag.back.textDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</entry>
   <entry key="tag.back.fontSize">Rozmiar tekstu awersu (mm)</entry>
+  <entry key="tag.back.textOffsetX">Przesuniecie napisu X (mm)</entry>
+  <entry key="tag.back.textOffsetY">Przesuniecie napisu Y (mm)</entry>
   <entry key="tag.back.logoEnabled">Dodaj logo SVG/PNG</entry>
   <entry key="tag.back.logoFile">Plik logo (SVG lub PNG)</entry>
   <entry key="tag.back.logoSize">Rozmiar logo (mm)</entry>
@@ -61,7 +65,7 @@
   <entry key="dice.size">Rozmiar kostki (mm)</entry>
   <entry key="dice.roundness">Okraglosc krawedzi (mm)</entry>
   <entry key="dice.sideHoleDiameter">Srednica bocznego otworu na wylot (mm, 0 = brak)</entry>
-  <entry key="dice.sphereRadius">Promien kuli podgladu (mm)</entry>
+  <entry key="dice.sphereRadius">Zaokraglanie rogow kula (mm)</entry>
   <entry key="dice.params.summary">Parametry kosci</entry>
   <entry key="dice.preview.summary">Zaawansowane</entry>
   <entry key="dice.preview.showCube">Widoczny szescian</entry>

@@ -17,6 +17,7 @@ import {
   defaultConfig,
   defaultFontChoice,
   defaultLanguage,
+  getDefaultDiceSphereRadius,
   languageStorageKey,
   lastStateStorageKey,
   maxCharsPerLine,
@@ -84,8 +85,8 @@ app.innerHTML = `
       <div class="field">
         <label for="modelType">Typ modelu</label>
         <select id="modelType">
-          <option value="tag">Plaski tag</option>
-          <option value="tag3d">Tag 3D</option>
+          <option value="tag">Tag dwustronny</option>
+          <option value="tag3d">Tag jednostronny</option>
           <option value="puzzle">Puzzle (beta)</option>
           <option value="dice">Kostka K6 (beta)</option>
         </select>
@@ -112,12 +113,11 @@ app.innerHTML = `
                 <option value="gentilis">Gentilis</option>
                 <option value="droidSans">Droid Sans</option>
                 <option value="droidSerif">Droid Serif</option>
-                <option value="custom">Wlasny font (.ttf lub typeface.json)</option>
               </select>
             </div>
 
             <div class="field">
-              <label for="diceSphereRadius">Promien kuli podgladu (mm)</label>
+              <label for="diceSphereRadius">Zaokraglanie rogow kula (mm)</label>
               <input id="diceSphereRadius" type="number" min="0" max="100" step="0.1" value="${defaultConfig.diceSphereRadius}" />
             </div>
           </div>
@@ -154,26 +154,6 @@ app.innerHTML = `
         <details class="dice-faces-panel" id="tagBasePanel">
           <summary>Parametry tagu</summary>
 
-          <div class="field" id="fontChoiceWrap">
-            <label for="fontChoice">Font</label>
-            <select id="fontChoice">
-              <option value="helvetiker">Helvetiker (domyslny)</option>
-              <option value="notoSansPl">Noto Sans (PL)</option>
-              <option value="notoSerifPl">Noto Serif (PL)</option>
-              <option value="optimer">Optimer</option>
-              <option value="gentilis">Gentilis</option>
-              <option value="droidSans">Droid Sans</option>
-              <option value="droidSerif">Droid Serif</option>
-              <option value="custom">Wlasny font (.ttf lub typeface.json)</option>
-            </select>
-          </div>
-
-          <div class="field" id="customFontWrap" style="display: none;">
-            <label for="customFontFile">Wlasny plik fontu</label>
-            <input id="customFontFile" type="file" accept=".ttf,.json,application/json,font/ttf" />
-            <small id="fontStatus">Wybierz plik .ttf lub typeface.json.</small>
-          </div>
-
           <div class="field">
             <label for="shape">Ksztalt</label>
             <select id="shape">
@@ -209,7 +189,7 @@ app.innerHTML = `
           <div class="grid-2" id="holeSettingsWrap">
             <div class="field">
               <label for="holeDiameter">Srednica otworu (mm)</label>
-              <input id="holeDiameter" type="number" min="2" max="12" step="0.5" value="${defaultConfig.holeDiameter}" />
+              <input id="holeDiameter" type="number" min="0" max="12" step="0.5" value="${defaultConfig.holeDiameter}" />
             </div>
             <div class="field">
               <label for="holeMargin">Margines otworu (mm)</label>
@@ -226,8 +206,112 @@ app.innerHTML = `
           </div>
         </details>
 
-        <details class="dice-faces-panel" id="tagFrontPanel">
+        <details class="dice-faces-panel" id="tagAwersPanel">
+          <summary>Awers (gora)</summary>
+
+          <div class="field">
+            <label for="frontFontChoice">Font</label>
+            <select id="frontFontChoice">
+              <option value="helvetiker">Helvetiker (domyslny)</option>
+              <option value="notoSansPl">Noto Sans (PL)</option>
+              <option value="notoSerifPl">Noto Serif (PL)</option>
+              <option value="optimer">Optimer</option>
+              <option value="gentilis">Gentilis</option>
+              <option value="droidSans">Droid Sans</option>
+              <option value="droidSerif">Droid Serif</option>
+              <option value="custom">Wlasny font (.ttf lub typeface.json)</option>
+            </select>
+          </div>
+          <div class="field" id="frontCustomFontWrap" style="display: none;">
+            <label for="frontCustomFontFile">Wlasny plik fontu</label>
+            <input id="frontCustomFontFile" type="file" accept=".ttf,.json,application/json,font/ttf" />
+            <small id="frontFontStatus">Wybierz plik .ttf lub typeface.json.</small>
+          </div>
+
+          <div class="field">
+            <label for="backText">Napis</label>
+            <textarea id="backText" rows="3" placeholder="Wpisz kilka linii tekstu">${defaultConfig.backText}</textarea>
+          </div>
+
+          <div class="field">
+            <label for="backTextDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</label>
+            <input id="backTextDepth" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.backTextDepth}" />
+          </div>
+
+          <div class="field">
+            <label for="backFontSize">Rozmiar tekstu awersu (mm)</label>
+            <input id="backFontSize" type="number" min="4" max="22" step="0.5" value="${defaultConfig.backFontSize}" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="backTextOffsetX">Przesuniecie napisu X (mm)</label>
+              <input id="backTextOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backTextOffsetX}" />
+            </div>
+            <div class="field">
+              <label for="backTextOffsetY">Przesuniecie napisu Y (mm)</label>
+              <input id="backTextOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backTextOffsetY}" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-inline">
+              <input id="backLogoEnabled" type="checkbox" />
+              <span>Dodaj logo SVG</span>
+            </label>
+          </div>
+
+          <div class="field" id="backLogoFileWrap" style="display: none;">
+            <label for="backLogoFile">Plik logo (SVG lub PNG)</label>
+            <input id="backLogoFile" type="file" accept=".svg,.png,image/svg+xml,image/png" />
+            <small id="backLogoStatus">Wybierz plik SVG lub PNG dla awersu.</small>
+          </div>
+
+          <div class="grid-2" id="backLogoSettingsWrap" style="display: none;">
+            <div class="field">
+              <label for="backLogoSize">Rozmiar logo (mm)</label>
+              <input id="backLogoSize" type="number" min="2" max="40" step="0.5" value="${defaultConfig.backLogoSize}" />
+            </div>
+            <div class="field">
+              <label for="backLogoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
+              <input id="backLogoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.backLogoDepth}" />
+            </div>
+            <div class="field">
+              <label for="backLogoOffsetX">Przesuniecie logo X (mm)</label>
+              <input id="backLogoOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetX}" />
+            </div>
+            <div class="field">
+              <label for="backLogoOffsetY">Przesuniecie logo Y (mm)</label>
+              <input id="backLogoOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetY}" />
+            </div>
+            <div class="field">
+              <label for="backLogoRotation">Obrot logo (stopnie)</label>
+              <input id="backLogoRotation" type="number" min="-180" max="180" step="1" value="${defaultConfig.backLogoRotation}" />
+            </div>
+          </div>
+        </details>
+
+        <details class="dice-faces-panel" id="tagRewersPanel">
           <summary>Rewers (dol)</summary>
+
+          <div class="field">
+            <label for="backFontChoice">Font</label>
+            <select id="backFontChoice">
+              <option value="helvetiker">Helvetiker (domyslny)</option>
+              <option value="notoSansPl">Noto Sans (PL)</option>
+              <option value="notoSerifPl">Noto Serif (PL)</option>
+              <option value="optimer">Optimer</option>
+              <option value="gentilis">Gentilis</option>
+              <option value="droidSans">Droid Sans</option>
+              <option value="droidSerif">Droid Serif</option>
+              <option value="custom">Wlasny font (.ttf lub typeface.json)</option>
+            </select>
+          </div>
+          <div class="field" id="backCustomFontWrap" style="display: none;">
+            <label for="backCustomFontFile">Wlasny plik fontu</label>
+            <input id="backCustomFontFile" type="file" accept=".ttf,.json,application/json,font/ttf" />
+            <small id="backFontStatus">Wybierz plik .ttf lub typeface.json.</small>
+          </div>
 
           <div class="field">
             <label for="text">Napis</label>
@@ -242,6 +326,17 @@ app.innerHTML = `
           <div class="field">
             <label for="fontSize">Rozmiar tekstu rewersu (mm)</label>
             <input id="fontSize" type="number" min="4" max="22" step="0.5" value="${defaultConfig.fontSize}" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="textOffsetX">Przesuniecie napisu X (mm)</label>
+              <input id="textOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.textOffsetX}" />
+            </div>
+            <div class="field">
+              <label for="textOffsetY">Przesuniecie napisu Y (mm)</label>
+              <input id="textOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.textOffsetY}" />
+            </div>
           </div>
 
           <div class="field">
@@ -281,60 +376,6 @@ app.innerHTML = `
           </div>
         </details>
 
-        <details class="dice-faces-panel" id="tagBackPanel">
-          <summary>Awers (gora)</summary>
-
-          <div class="field">
-            <label for="backText">Napis</label>
-            <textarea id="backText" rows="3" placeholder="Wpisz kilka linii tekstu">${defaultConfig.backText}</textarea>
-          </div>
-
-          <div class="field">
-            <label for="backTextDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</label>
-            <input id="backTextDepth" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.backTextDepth}" />
-          </div>
-
-          <div class="field">
-            <label for="backFontSize">Rozmiar tekstu awersu (mm)</label>
-            <input id="backFontSize" type="number" min="4" max="22" step="0.5" value="${defaultConfig.backFontSize}" />
-          </div>
-
-          <div class="field">
-            <label class="field-inline">
-              <input id="backLogoEnabled" type="checkbox" />
-              <span>Dodaj logo SVG</span>
-            </label>
-          </div>
-
-          <div class="field" id="backLogoFileWrap" style="display: none;">
-            <label for="backLogoFile">Plik logo (SVG lub PNG)</label>
-            <input id="backLogoFile" type="file" accept=".svg,.png,image/svg+xml,image/png" />
-            <small id="backLogoStatus">Wybierz plik SVG lub PNG dla awersu.</small>
-          </div>
-
-          <div class="grid-2" id="backLogoSettingsWrap" style="display: none;">
-            <div class="field">
-              <label for="backLogoSize">Rozmiar logo (mm)</label>
-              <input id="backLogoSize" type="number" min="2" max="40" step="0.5" value="${defaultConfig.backLogoSize}" />
-            </div>
-            <div class="field">
-              <label for="backLogoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
-              <input id="backLogoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.backLogoDepth}" />
-            </div>
-            <div class="field">
-              <label for="backLogoOffsetX">Przesuniecie logo X (mm)</label>
-              <input id="backLogoOffsetX" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetX}" />
-            </div>
-            <div class="field">
-              <label for="backLogoOffsetY">Przesuniecie logo Y (mm)</label>
-              <input id="backLogoOffsetY" type="number" min="-60" max="60" step="0.5" value="${defaultConfig.backLogoOffsetY}" />
-            </div>
-            <div class="field">
-              <label for="backLogoRotation">Obrot logo (stopnie)</label>
-              <input id="backLogoRotation" type="number" min="-180" max="180" step="1" value="${defaultConfig.backLogoRotation}" />
-            </div>
-          </div>
-        </details>
       </div>
 
       <div id="diceControls" style="display: none;">
@@ -720,17 +761,27 @@ const controlsMap = {
   languageSelect: requiredElement<HTMLSelectElement>('#languageSelect'),
   modelType: requiredElement<HTMLSelectElement>('#modelType'),
   tagControls: requiredElement<HTMLDivElement>('#tagControls'),
+  tagAwersPanel: requiredElement<HTMLDetailsElement>('#tagAwersPanel'),
+  tagRewersPanel: requiredElement<HTMLDetailsElement>('#tagRewersPanel'),
   diceControls: requiredElement<HTMLDivElement>('#diceControls'),
   text: requiredElement<HTMLTextAreaElement>('#text'),
   backText: requiredElement<HTMLTextAreaElement>('#backText'),
   textBold: requiredElement<HTMLInputElement>('#textBold'),
+  textOffsetX: requiredElement<HTMLInputElement>('#textOffsetX'),
+  textOffsetY: requiredElement<HTMLInputElement>('#textOffsetY'),
+  backTextOffsetX: requiredElement<HTMLInputElement>('#backTextOffsetX'),
+  backTextOffsetY: requiredElement<HTMLInputElement>('#backTextOffsetY'),
   backTextDepth: requiredElement<HTMLInputElement>('#backTextDepth'),
   backFontSize: requiredElement<HTMLInputElement>('#backFontSize'),
-  fontChoice: requiredElement<HTMLSelectElement>('#fontChoice'),
   fontChoiceDice: requiredElement<HTMLSelectElement>('#fontChoiceDice'),
-  customFontWrap: requiredElement<HTMLDivElement>('#customFontWrap'),
-  customFontFile: requiredElement<HTMLInputElement>('#customFontFile'),
-  fontStatus: requiredElement<HTMLElement>('#fontStatus'),
+  frontFontChoice: requiredElement<HTMLSelectElement>('#frontFontChoice'),
+  backFontChoice: requiredElement<HTMLSelectElement>('#backFontChoice'),
+  frontCustomFontWrap: requiredElement<HTMLDivElement>('#frontCustomFontWrap'),
+  backCustomFontWrap: requiredElement<HTMLDivElement>('#backCustomFontWrap'),
+  frontCustomFontFile: requiredElement<HTMLInputElement>('#frontCustomFontFile'),
+  backCustomFontFile: requiredElement<HTMLInputElement>('#backCustomFontFile'),
+  frontFontStatus: requiredElement<HTMLElement>('#frontFontStatus'),
+  backFontStatus: requiredElement<HTMLElement>('#backFontStatus'),
   logoEnabled: requiredElement<HTMLInputElement>('#logoEnabled'),
   logoFileWrap: requiredElement<HTMLDivElement>('#logoFileWrap'),
   logoFile: requiredElement<HTMLInputElement>('#logoFile'),
@@ -857,7 +908,6 @@ const controlsMap = {
 }
 
 controlsMap.modelType.value = defaultConfig.modelType
-controlsMap.fontChoice.value = defaultFontChoice
 controlsMap.fontChoiceDice.value = defaultFontChoice
 
 interface StatusState {
@@ -869,7 +919,8 @@ interface StatusState {
 let currentLanguage: LanguageCode = defaultLanguage
 let translations: Record<string, string> = {}
 const localeCache: Partial<Record<LanguageCode, Record<string, string>>> = {}
-let fontStatusState: StatusState = { key: 'status.font.select', isError: false }
+let frontFontStatusState: StatusState = { key: 'status.font.select', isError: false }
+let backFontStatusState: StatusState = { key: 'status.font.select', isError: false }
 let manifoldEngine: ManifoldToplevel | null = null
 let manifoldInitializationFailed = false
 let geometryStatusKey: 'status.geometry.error' | 'status.geometry.initError' | null = null
@@ -965,7 +1016,8 @@ function renderStatus(target: HTMLElement, state: StatusState): void {
 }
 
 function refreshStatusTexts(): void {
-  renderStatus(controlsMap.fontStatus, fontStatusState)
+  renderStatus(controlsMap.frontFontStatus, frontFontStatusState)
+  renderStatus(controlsMap.backFontStatus, backFontStatusState)
   renderStatus(controlsMap.logoStatus, logoStatusState)
   renderStatus(controlsMap.backLogoStatus, backLogoStatusState)
   if (geometryStatusKey) {
@@ -992,19 +1044,21 @@ function applyStaticTranslations(): void {
 
   setText('.subtitle', 'app.subtitle', 'Lokalny generator tagow 3D z eksportem STL.')
   setText('label[for="modelType"]', 'form.modelType', 'Typ modelu')
-  setText('#modelType option[value="tag"]', 'model.tag', 'Plaski tag')
-  setText('#modelType option[value="tag3d"]', 'model.tag3d', 'Tag 3D')
+  setText('#modelType option[value="tag"]', 'model.tag', 'Tag dwustronny')
+  setText('#modelType option[value="tag3d"]', 'model.tag3d', 'Tag jednostronny')
   setText('#modelType option[value="puzzle"]', 'model.puzzle', 'Puzzle (beta)')
   setText('#modelType option[value="dice"]', 'model.dice', 'Kostka K6 (beta)')
-  setText('label[for="fontChoice"]', 'form.font', 'Font')
-  setText('#fontChoice option[value="helvetiker"]', 'font.helvetiker', 'Helvetiker (domyslny)')
-  setText('#fontChoice option[value="notoSansPl"]', 'font.notoSansPl', 'Noto Sans (PL)')
-  setText('#fontChoice option[value="notoSerifPl"]', 'font.notoSerifPl', 'Noto Serif (PL)')
-  setText('#fontChoice option[value="optimer"]', 'font.optimer', 'Optimer')
-  setText('#fontChoice option[value="gentilis"]', 'font.gentilis', 'Gentilis')
-  setText('#fontChoice option[value="droidSans"]', 'font.droidSans', 'Droid Sans')
-  setText('#fontChoice option[value="droidSerif"]', 'font.droidSerif', 'Droid Serif')
-  setText('#fontChoice option[value="custom"]', 'font.custom', 'Wlasny font (.ttf lub typeface.json)')
+  for (const selector of ['#frontFontChoice', '#backFontChoice']) {
+    setText(`label[for="${selector.slice(1)}"]`, 'form.font', 'Font')
+    setText(`${selector} option[value="helvetiker"]`, 'font.helvetiker', 'Helvetiker (domyslny)')
+    setText(`${selector} option[value="notoSansPl"]`, 'font.notoSansPl', 'Noto Sans (PL)')
+    setText(`${selector} option[value="notoSerifPl"]`, 'font.notoSerifPl', 'Noto Serif (PL)')
+    setText(`${selector} option[value="optimer"]`, 'font.optimer', 'Optimer')
+    setText(`${selector} option[value="gentilis"]`, 'font.gentilis', 'Gentilis')
+    setText(`${selector} option[value="droidSans"]`, 'font.droidSans', 'Droid Sans')
+    setText(`${selector} option[value="droidSerif"]`, 'font.droidSerif', 'Droid Serif')
+    setText(`${selector} option[value="custom"]`, 'font.custom', 'Wlasny font (.ttf lub typeface.json)')
+  }
   setText('label[for="fontChoiceDice"]', 'form.font', 'Font')
   setText('#fontChoiceDice option[value="helvetiker"]', 'font.helvetiker', 'Helvetiker (domyslny)')
   setText('#fontChoiceDice option[value="notoSansPl"]', 'font.notoSansPl', 'Noto Sans (PL)')
@@ -1013,8 +1067,8 @@ function applyStaticTranslations(): void {
   setText('#fontChoiceDice option[value="gentilis"]', 'font.gentilis', 'Gentilis')
   setText('#fontChoiceDice option[value="droidSans"]', 'font.droidSans', 'Droid Sans')
   setText('#fontChoiceDice option[value="droidSerif"]', 'font.droidSerif', 'Droid Serif')
-  setText('#fontChoiceDice option[value="custom"]', 'font.custom', 'Wlasny font (.ttf lub typeface.json)')
-  setText('label[for="customFontFile"]', 'font.customFile', 'Wlasny plik fontu')
+  setText('label[for="frontCustomFontFile"]', 'font.customFile', 'Wlasny plik fontu')
+  setText('label[for="backCustomFontFile"]', 'font.customFile', 'Wlasny plik fontu')
   setText('#diceParamsPanel > summary', 'dice.params.summary', 'Parametry kosci')
 
   updateTagBasePanelSummary()
@@ -1032,11 +1086,13 @@ function applyStaticTranslations(): void {
   setText('label[for="holeOffsetX"]', 'tag.holeOffsetX', 'Przesuniecie otworu X (mm)')
   setText('label[for="holeOffsetY"]', 'tag.holeOffsetY', 'Przesuniecie otworu Y (mm)')
 
-  setText('#tagFrontPanel > summary', 'tag.front.summary', 'Awers (gora)')
+  setText('#tagRewersPanel > summary', 'tag.front.summary', 'Rewers (dol)')
   setText('label[for="text"]', 'tag.front.text', 'Napis')
   setAttr('#text', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
-  setText('label[for="textDepth"]', 'tag.front.textDepth', 'Glebokosc tekstu awersu (mm, ujemna = wklesly)')
-  setText('label[for="fontSize"]', 'tag.front.fontSize', 'Rozmiar tekstu awersu (mm)')
+  setText('label[for="textDepth"]', 'tag.front.textDepth', 'Glebokosc tekstu rewersu (mm, ujemna = wklesly)')
+  setText('label[for="fontSize"]', 'tag.front.fontSize', 'Rozmiar tekstu rewersu (mm)')
+  setText('label[for="textOffsetX"]', 'tag.front.textOffsetX', 'Przesuniecie napisu X (mm)')
+  setText('label[for="textOffsetY"]', 'tag.front.textOffsetY', 'Przesuniecie napisu Y (mm)')
   setText('#textBold + span', 'text.bold', 'Pogrubienie tekstu')
   setText('#logoEnabled + span', 'tag.front.logoEnabled', 'Dodaj logo SVG/PNG')
   setText('label[for="logoFile"]', 'tag.front.logoFile', 'Plik logo (SVG lub PNG)')
@@ -1046,11 +1102,13 @@ function applyStaticTranslations(): void {
   setText('label[for="logoOffsetY"]', 'tag.front.logoOffsetY', 'Przesuniecie logo Y (mm)')
   setText('label[for="logoRotation"]', 'tag.front.logoRotation', 'Obrot logo (stopnie)')
 
-  setText('#tagBackPanel > summary', 'tag.back.summary', 'Rewers (dol)')
+  setText('#tagAwersPanel > summary', 'tag.back.summary', 'Awers (gora)')
   setText('label[for="backText"]', 'tag.back.text', 'Napis')
   setAttr('#backText', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
-  setText('label[for="backTextDepth"]', 'tag.back.textDepth', 'Glebokosc tekstu rewersu (mm, ujemna = wklesly)')
-  setText('label[for="backFontSize"]', 'tag.back.fontSize', 'Rozmiar tekstu rewersu (mm)')
+  setText('label[for="backTextDepth"]', 'tag.back.textDepth', 'Glebokosc tekstu awersu (mm, ujemna = wklesly)')
+  setText('label[for="backFontSize"]', 'tag.back.fontSize', 'Rozmiar tekstu awersu (mm)')
+  setText('label[for="backTextOffsetX"]', 'tag.back.textOffsetX', 'Przesuniecie napisu X (mm)')
+  setText('label[for="backTextOffsetY"]', 'tag.back.textOffsetY', 'Przesuniecie napisu Y (mm)')
   setText('#backLogoEnabled + span', 'tag.back.logoEnabled', 'Dodaj logo SVG/PNG')
   setText('label[for="backLogoFile"]', 'tag.back.logoFile', 'Plik logo (SVG lub PNG)')
   setText('label[for="backLogoSize"]', 'tag.back.logoSize', 'Rozmiar logo (mm)')
@@ -1062,7 +1120,7 @@ function applyStaticTranslations(): void {
   setText('label[for="diceSize"]', 'dice.size', 'Rozmiar kostki (mm)')
   setText('label[for="diceRoundness"]', 'dice.roundness', 'Okraglosc krawedzi (mm)')
   setText('label[for="diceSideHoleDiameter"]', 'dice.sideHoleDiameter', 'Srednica bocznego otworu na wylot (mm, 0 = brak)')
-  setText('label[for="diceSphereRadius"]', 'dice.sphereRadius', 'Promien kuli podgladu (mm)')
+  setText('label[for="diceSphereRadius"]', 'dice.sphereRadius', 'Zaokraglanie rogow kula (mm)')
   setText('#advancedPanel > summary', 'dice.preview.summary', 'Zaawansowane')
   setText('#diceShowCube + span', 'dice.preview.showCube', 'Widoczny szescian')
   setText('#diceShowText + span', 'dice.preview.showText', 'Widoczny tekst')
@@ -1265,10 +1323,16 @@ scene.add(shadowPlate)
 
 let activeTagObject: THREE.Object3D | null = null
 let loadedFont: unknown | null = null
+let loadedFrontFont: unknown | null = null
+let loadedBackFont: unknown | null = null
+let loadedFrontFontChoice: FontChoice | null = null
+let loadedBackFontChoice: FontChoice | null = null
 const fontLoader = new FontLoader()
 const ttfLoader = new TTFLoader()
 const svgLoader = new SVGLoader()
 let fontLoadToken = 0
+let frontFontLoadToken = 0
+let backFontLoadToken = 0
 let frontLogoLoadToken = 0
 let backLogoLoadToken = 0
 let loadedLogoShapes: THREE.Shape[] = []
@@ -1322,12 +1386,12 @@ function getTextLines(text: string): string[] {
   return text.replace(/\r/g, '').split('\n').slice(0, maxTextLines)
 }
 
-function fontHasGlyph(char: string): boolean {
-  if (!loadedFont) {
+function fontHasGlyph(char: string, font: unknown | null = loadedFont): boolean {
+  if (!font) {
     return false
   }
 
-  const fontData = (loadedFont as { data?: { glyphs?: Record<string, unknown> } }).data
+  const fontData = (font as { data?: { glyphs?: Record<string, unknown> } }).data
   const glyphs = fontData?.glyphs
   if (!glyphs) {
     return false
@@ -1336,18 +1400,29 @@ function fontHasGlyph(char: string): boolean {
   return glyphs[char] !== undefined
 }
 
-function normalizeTextForFont(text: string): string {
+function normalizeTextForFont(text: string, font: unknown | null = loadedFont): string {
   return Array.from(text, (char) => {
-    if (fontHasGlyph(char)) {
+    if (fontHasGlyph(char, font)) {
       return char
     }
     return polishGlyphFallback[char] ?? char
   }).join('')
 }
 
-function setFontStatus(key: string, isError: boolean, vars?: Record<string, string | number>): void {
-  fontStatusState = { key, vars, isError }
-  renderStatus(controlsMap.fontStatus, fontStatusState)
+function setSideFontStatus(
+  side: 'front' | 'back',
+  key: string,
+  isError: boolean,
+  vars?: Record<string, string | number>,
+): void {
+  const state = { key, vars, isError }
+  if (side === 'front') {
+    frontFontStatusState = state
+    renderStatus(controlsMap.frontFontStatus, state)
+  } else {
+    backFontStatusState = state
+    renderStatus(controlsMap.backFontStatus, state)
+  }
 }
 
 function setLogoStatus(key: string, isError: boolean, vars?: Record<string, string | number>): void {
@@ -1427,21 +1502,127 @@ function isBuiltinFontChoice(choice: FontChoice): choice is Exclude<FontChoice, 
   return choice !== 'custom'
 }
 
-function updateCustomFontVisibility(): void {
-  const isCustom = controlsMap.fontChoice.value === 'custom'
-  const isDice = controlsMap.modelType.value === 'dice'
-  controlsMap.customFontWrap.style.display = isCustom && !isDice ? '' : 'none'
+function normalizeFontChoice(choice: unknown, fallback: FontChoice): FontChoice {
+  const choices: FontChoice[] = [
+    'helvetiker',
+    'optimer',
+    'gentilis',
+    'droidSans',
+    'droidSerif',
+    'notoSansPl',
+    'notoSerifPl',
+    'custom',
+  ]
+  return typeof choice === 'string' && choices.includes(choice as FontChoice)
+    ? choice as FontChoice
+    : fallback
 }
 
-function applySelectedFontChoice(choice: FontChoice): void {
-  controlsMap.fontChoice.value = choice
-  controlsMap.fontChoiceDice.value = choice
-  updateCustomFontVisibility()
-  if (isBuiltinFontChoice(choice)) {
-    saveLastState()
-    void applyBuiltinFont(choice)
+function updateCustomFontVisibility(): void {
+  controlsMap.frontCustomFontWrap.style.display = controlsMap.frontFontChoice.value === 'custom' ? '' : 'none'
+  controlsMap.backCustomFontWrap.style.display = controlsMap.backFontChoice.value === 'custom' ? '' : 'none'
+}
+
+async function applyBuiltinSideFont(
+  side: 'front' | 'back',
+  choice: Exclude<FontChoice, 'custom'>,
+): Promise<void> {
+  const token = side === 'front' ? ++frontFontLoadToken : ++backFontLoadToken
+  if (side === 'front') {
+    loadedFrontFont = null
+    loadedFrontFontChoice = null
   } else {
-    setFontStatus('status.font.select', false)
+    loadedBackFont = null
+    loadedBackFontChoice = null
+  }
+  setSideFontStatus(side, 'status.font.loadingBuiltin', false)
+  try {
+    const font = await loadFontFromUrl(builtinFontUrls[choice])
+    if (token !== (side === 'front' ? frontFontLoadToken : backFontLoadToken)) {
+      return
+    }
+    if (side === 'front') {
+      loadedFrontFont = font
+      loadedFrontFontChoice = choice
+    } else {
+      loadedBackFont = font
+      loadedBackFontChoice = choice
+    }
+    setSideFontStatus(side, 'status.font.loaded', false)
+    rebuildTag()
+  } catch {
+    if (token !== (side === 'front' ? frontFontLoadToken : backFontLoadToken)) {
+      return
+    }
+    setSideFontStatus(side, 'status.font.loadError', true)
+  }
+}
+
+function applySideFontChoice(side: 'front' | 'back', choice: FontChoice): void {
+  if (side === 'front') controlsMap.frontFontChoice.value = choice
+  else controlsMap.backFontChoice.value = choice
+  updateCustomFontVisibility()
+  saveLastState()
+  loadConfiguredSideFont(side, choice)
+  rebuildTag()
+}
+
+function loadConfiguredSideFont(side: 'front' | 'back', choice: FontChoice): void {
+  const loadedChoice = side === 'front' ? loadedFrontFontChoice : loadedBackFontChoice
+  const font = side === 'front' ? loadedFrontFont : loadedBackFont
+  if (loadedChoice === choice && font) {
+    return
+  }
+  if (isBuiltinFontChoice(choice)) {
+    void applyBuiltinSideFont(side, choice)
+    return
+  }
+
+  if (side === 'front') {
+    frontFontLoadToken += 1
+    loadedFrontFont = null
+    loadedFrontFontChoice = null
+  } else {
+    backFontLoadToken += 1
+    loadedBackFont = null
+    loadedBackFontChoice = null
+  }
+  setSideFontStatus(side, 'status.font.select', false)
+}
+
+async function applyCustomSideFontFromFile(side: 'front' | 'back', file: File): Promise<void> {
+  const token = side === 'front' ? ++frontFontLoadToken : ++backFontLoadToken
+  if (side === 'front') {
+    loadedFrontFont = null
+    loadedFrontFontChoice = null
+  } else {
+    loadedBackFont = null
+    loadedBackFontChoice = null
+  }
+  setSideFontStatus(side, 'status.font.loadingCustom', false, { name: file.name })
+  try {
+    const isTtf = file.name.toLowerCase().endsWith('.ttf')
+    const font = isTtf
+      ? fontLoader.parse(ttfLoader.parse(await file.arrayBuffer()) as never)
+      : fontLoader.parse(JSON.parse(await file.text()) as never)
+    if (token !== (side === 'front' ? frontFontLoadToken : backFontLoadToken)) {
+      return
+    }
+    if (side === 'front') {
+      loadedFrontFont = font
+      loadedFrontFontChoice = 'custom'
+    } else {
+      loadedBackFont = font
+      loadedBackFontChoice = 'custom'
+    }
+    setSideFontStatus(side, 'status.font.customLoaded', false, { name: file.name })
+    saveLastState()
+    rebuildTag()
+  } catch {
+    if (token !== (side === 'front' ? frontFontLoadToken : backFontLoadToken)) {
+      return
+    }
+    setSideFontStatus(side, 'status.font.invalid', true)
   }
 }
 
@@ -1523,10 +1704,10 @@ function updateModelControlsVisibility(): void {
   const modelType = controlsMap.modelType.value as ModelType
   const isDice = modelType === 'dice'
   const isPuzzle = modelType === 'puzzle'
-  const allowsNoHole = modelType === 'tag3d'
   const allowsTallTag = modelType === 'tag3d'
   controlsMap.diceParamsPanel.style.display = isDice ? '' : 'none'
   controlsMap.tagControls.style.display = isDice ? 'none' : ''
+  controlsMap.tagRewersPanel.style.display = modelType === 'tag3d' ? 'none' : ''
   controlsMap.diceControls.style.display = isDice ? '' : 'none'
   controlsMap.diceParamsOnlyWrap.style.display = isDice ? '' : 'none'
   controlsMap.diceDimensionsWrap.style.display = isDice ? '' : 'none'
@@ -1534,7 +1715,7 @@ function updateModelControlsVisibility(): void {
   controlsMap.shape.disabled = isPuzzle
   controlsMap.height.disabled = isPuzzle
   controlsMap.holeSettingsWrap.style.display = isPuzzle ? 'none' : ''
-  controlsMap.holeDiameter.min = allowsNoHole ? '0' : '2'
+  controlsMap.holeDiameter.min = '0'
   controlsMap.thickness.max = allowsTallTag ? '100' : '8'
   if (isPuzzle) {
     controlsMap.shape.value = 'puzzle'
@@ -1608,7 +1789,8 @@ function loadFontFromUrl(url: string): Promise<unknown> {
 
 async function applyBuiltinFont(choice: Exclude<FontChoice, 'custom'>): Promise<void> {
   const token = ++fontLoadToken
-  setFontStatus('status.font.loadingBuiltin', false)
+  setSideFontStatus('front', 'status.font.loadingBuiltin', false)
+  setSideFontStatus('back', 'status.font.loadingBuiltin', false)
 
   try {
     const font = await loadFontFromUrl(builtinFontUrls[choice])
@@ -1616,38 +1798,15 @@ async function applyBuiltinFont(choice: Exclude<FontChoice, 'custom'>): Promise<
       return
     }
     loadedFont = font
-    setFontStatus('status.font.loaded', false)
+    setSideFontStatus('front', 'status.font.loaded', false)
+    setSideFontStatus('back', 'status.font.loaded', false)
     rebuildTag()
   } catch {
     if (token !== fontLoadToken) {
       return
     }
-    setFontStatus('status.font.loadError', true)
-  }
-}
-
-async function applyCustomFontFromFile(file: File): Promise<void> {
-  const token = ++fontLoadToken
-  setFontStatus('status.font.loadingCustom', false, { name: file.name })
-
-  try {
-    const isTtf = file.name.toLowerCase().endsWith('.ttf')
-    const font = isTtf
-      ? fontLoader.parse(ttfLoader.parse(await file.arrayBuffer()) as never)
-      : fontLoader.parse(JSON.parse(await file.text()) as never)
-
-    if (token !== fontLoadToken) {
-      return
-    }
-
-    loadedFont = font
-    setFontStatus('status.font.customLoaded', false, { name: file.name })
-    rebuildTag()
-  } catch {
-    if (token !== fontLoadToken) {
-      return
-    }
-    setFontStatus('status.font.invalid', true)
+    setSideFontStatus('front', 'status.font.loadError', true)
+    setSideFontStatus('back', 'status.font.loadError', true)
   }
 }
 
@@ -2327,8 +2486,8 @@ function isClosedTwoManifoldGeometry(geometry: THREE.BufferGeometry): boolean {
   return edgeCounts.size > 0 && [...edgeCounts.values()].every((count) => count === 2)
 }
 
-function createLaidOutTextGeometries(config: TagConfig, depth: number): TextGeometry[] {
-  if (!loadedFont) {
+function createLaidOutTextGeometries(config: TagConfig, depth: number, font: unknown | null): TextGeometry[] {
+  if (!font) {
     return []
   }
 
@@ -2343,13 +2502,13 @@ function createLaidOutTextGeometries(config: TagConfig, depth: number): TextGeom
   let maxY = -Infinity
 
   lines.forEach((line, index) => {
-    const normalizedLine = normalizeTextForFont(line)
+    const normalizedLine = normalizeTextForFont(line, font)
     if (normalizedLine.length === 0) {
       return
     }
 
     const geometry = new TextGeometry(normalizedLine, {
-      font: loadedFont as never,
+      font: font as never,
       size: config.fontSize,
       depth,
       curveSegments: 18,
@@ -2384,7 +2543,12 @@ function createLaidOutTextGeometries(config: TagConfig, depth: number): TextGeom
   const overallCenterY = (minY + maxY) / 2
   geometries.forEach((geometry) => geometry.translate(-overallCenterX, -overallCenterY, 0))
 
-  return applyTextBoldToGeometries(geometries, config.fontSize, config.textBold)
+  const laidOutGeometries = applyTextBoldToGeometries(geometries, config.fontSize, config.textBold)
+  laidOutGeometries.forEach((geometry) => {
+    geometry.rotateZ(Math.PI)
+    geometry.translate(config.textOffsetX, config.textOffsetY, 0)
+  })
+  return laidOutGeometries
 }
 
 function getTextBoldOffsets(fontSize: number, enabled: boolean): THREE.Vector2[] {
@@ -2621,12 +2785,18 @@ function applyDebossLogoToTagMeshes(meshes: THREE.Mesh[], config: TagConfig): TH
 }
 
 function createBackTextObject(config: TagConfig): THREE.Object3D | null {
-  if (!loadedFont || config.backText.trim().length === 0 || config.backTextDepth <= 0.001) {
+  if (!loadedFrontFont || config.backText.trim().length === 0 || config.backTextDepth <= 0.001) {
     return null
   }
 
-  const sideConfig = { ...config, text: config.backText, fontSize: config.backFontSize }
-  const textGeometries = createLaidOutTextGeometries(sideConfig, Math.abs(config.backTextDepth))
+  const sideConfig = {
+    ...config,
+    text: config.backText,
+    fontSize: config.backFontSize,
+    textOffsetX: config.backTextOffsetX,
+    textOffsetY: config.backTextOffsetY,
+  }
+  const textGeometries = createLaidOutTextGeometries(sideConfig, Math.abs(config.backTextDepth), loadedFrontFont)
   if (textGeometries.length === 0) {
     return null
   }
@@ -2644,14 +2814,20 @@ function createBackTextObject(config: TagConfig): THREE.Object3D | null {
 }
 
 function createBackTextCutters(config: TagConfig): THREE.Mesh[] {
-  if (!loadedFont || config.backText.trim().length === 0 || config.backTextDepth >= -0.001) {
+  if (!loadedFrontFont || config.backText.trim().length === 0 || config.backTextDepth >= -0.001) {
     return []
   }
 
   const seamOverlap = 0.2
   const cutterDepth = Math.abs(config.backTextDepth) + seamOverlap
-  const sideConfig = { ...config, text: config.backText, fontSize: config.backFontSize }
-  const textGeometries = createLaidOutTextGeometries(sideConfig, cutterDepth)
+  const sideConfig = {
+    ...config,
+    text: config.backText,
+    fontSize: config.backFontSize,
+    textOffsetX: config.backTextOffsetX,
+    textOffsetY: config.backTextOffsetY,
+  }
+  const textGeometries = createLaidOutTextGeometries(sideConfig, cutterDepth, loadedFrontFont)
 
   return textGeometries.map((geometry) => {
     const cutterMesh = new THREE.Mesh(geometry, baseMaterial)
@@ -2724,12 +2900,12 @@ function applyDebossBackLogoToTagMeshes(meshes: THREE.Mesh[], config: TagConfig)
   return applyCuttersToTagMeshes(meshes, () => createBackLogoCutters(config))
 }
 
-function createLaidOutTextShapes(config: TagConfig): THREE.Shape[] {
-  if (!loadedFont) {
+function createLaidOutTextShapes(config: TagConfig, font: unknown | null): THREE.Shape[] {
+  if (!font) {
     return []
   }
 
-  const font = loadedFont as {
+  const textFont = font as {
     generateShapes: (text: string, size: number) => THREE.Shape[]
   }
 
@@ -2744,12 +2920,12 @@ function createLaidOutTextShapes(config: TagConfig): THREE.Shape[] {
   let maxY = -Infinity
 
   lines.forEach((line, index) => {
-    const normalizedLine = normalizeTextForFont(line)
+    const normalizedLine = normalizeTextForFont(line, font)
     if (normalizedLine.length === 0) {
       return
     }
 
-    const lineShapes = font.generateShapes(normalizedLine, config.fontSize)
+    const lineShapes = textFont.generateShapes(normalizedLine, config.fontSize)
     if (lineShapes.length === 0) {
       return
     }
@@ -2790,11 +2966,16 @@ function createLaidOutTextShapes(config: TagConfig): THREE.Shape[] {
 
   const overallCenterX = (minX + maxX) / 2
   const overallCenterY = (minY + maxY) / 2
-  return translatedShapes.map((shape) => cloneShiftedShape(shape, -overallCenterX, -overallCenterY))
+  const centeredShapes = translatedShapes.map((shape) =>
+    cloneShiftedShape(shape, -overallCenterX, -overallCenterY),
+  )
+  return centeredShapes.map((shape) =>
+    cloneTransformedShape(shape, 1, config.textOffsetX, config.textOffsetY, Math.PI, 26),
+  )
 }
 
 function createThroughCutBridges(config: TagConfig): THREE.Mesh[] {
-  const shapes = createLaidOutTextShapes(config)
+  const shapes = createLaidOutTextShapes(config, loadedBackFont)
   if (shapes.length === 0) {
     return []
   }
@@ -2853,10 +3034,16 @@ function getConfigFromForm(): TagConfig {
   const thickness = clamp(Number(controlsMap.thickness.value), 1.5, modelType === 'tag3d' ? 100 : 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
+  const textOffsetX = clamp(Number(controlsMap.textOffsetX.value), -60, 60)
+  const textOffsetY = clamp(Number(controlsMap.textOffsetY.value), -60, 60)
+  const backTextOffsetX = clamp(Number(controlsMap.backTextOffsetX.value), -60, 60)
+  const backTextOffsetY = clamp(Number(controlsMap.backTextOffsetY.value), -60, 60)
   const textBold = controlsMap.textBold.checked
   const maxCorner = Math.min(width, height) * 0.49
   const text = sanitizeTextInput(controlsMap.text.value)
   const backText = sanitizeTextInput(controlsMap.backText.value)
+  const frontFontChoice = normalizeFontChoice(controlsMap.frontFontChoice.value, defaultFontChoice)
+  const backFontChoice = normalizeFontChoice(controlsMap.backFontChoice.value, defaultFontChoice)
   const diceSize = clamp(Number(controlsMap.diceSize.value), 10, 60)
   const maxDiceRoundness = Math.max(0, diceSize * 0.18)
   const diceRoundness = clamp(Number(controlsMap.diceRoundness.value), 0, maxDiceRoundness)
@@ -2919,12 +3106,14 @@ function getConfigFromForm(): TagConfig {
     modelType,
     text,
     backText,
+    frontFontChoice,
+    backFontChoice,
     shape,
     width,
     height,
     thickness,
     cornerRadius: clamp(Number(controlsMap.cornerRadius.value), 0, maxCorner),
-    holeDiameter: clamp(Number(controlsMap.holeDiameter.value), modelType === 'tag3d' ? 0 : 2, 12),
+    holeDiameter: clamp(Number(controlsMap.holeDiameter.value), 0, 12),
     holeMargin: clamp(Number(controlsMap.holeMargin.value), 2, 20),
     holeOffsetX: clamp(Number(controlsMap.holeOffsetX.value), -60, 60),
     holeOffsetY: clamp(Number(controlsMap.holeOffsetY.value), -60, 60),
@@ -2932,6 +3121,10 @@ function getConfigFromForm(): TagConfig {
     backFontSize: clamp(Number(controlsMap.backFontSize.value), 4, 22),
     textDepth,
     backTextDepth,
+    textOffsetX,
+    textOffsetY,
+    backTextOffsetX,
+    backTextOffsetY,
     textBold,
     diceSize,
     diceRoundness,
@@ -3002,6 +3195,8 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.modelType.value = config.modelType
   controlsMap.text.value = config.text
   controlsMap.backText.value = config.backText
+  controlsMap.frontFontChoice.value = normalizeFontChoice(config.frontFontChoice, defaultFontChoice)
+  controlsMap.backFontChoice.value = normalizeFontChoice(config.backFontChoice, defaultFontChoice)
   controlsMap.shape.value = config.shape
   controlsMap.width.value = String(config.width)
   controlsMap.height.value = String(config.modelType === 'puzzle' ? config.width : config.height)
@@ -3066,6 +3261,10 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.backFontSize.value = String(config.backFontSize)
   controlsMap.textDepth.value = String(config.textDepth)
   controlsMap.backTextDepth.value = String(config.backTextDepth)
+  controlsMap.textOffsetX.value = String(config.textOffsetX)
+  controlsMap.textOffsetY.value = String(config.textOffsetY)
+  controlsMap.backTextOffsetX.value = String(config.backTextOffsetX)
+  controlsMap.backTextOffsetY.value = String(config.backTextOffsetY)
   controlsMap.textBold.checked = Boolean(config.textBold)
   controlsMap.logoEnabled.checked = Boolean(config.logoEnabled)
   controlsMap.logoSize.value = String(config.logoSize)
@@ -3083,6 +3282,9 @@ function applyConfigToForm(config: TagConfig): void {
   updateModelControlsVisibility()
   updateLogoControlsVisibility()
   updateBackLogoControlsVisibility()
+  updateCustomFontVisibility()
+  loadConfiguredSideFont('front', normalizeFontChoice(config.frontFontChoice, defaultFontChoice))
+  loadConfiguredSideFont('back', normalizeFontChoice(config.backFontChoice, defaultFontChoice))
 }
 
 function createBaseShape(config: TagConfig): THREE.Shape {
@@ -3565,14 +3767,14 @@ function shapeFromPoints(points: THREE.Vector2[]): THREE.Shape {
 }
 
 function centeredGlyphShapes(config: TagConfig): THREE.Shape[] {
-  if (!loadedFont) {
+  if (!loadedBackFont) {
     return []
   }
 
-  const font = loadedFont as {
+  const font = loadedBackFont as {
     generateShapes: (text: string, size: number) => THREE.Shape[]
   }
-  const glyphShapes = font.generateShapes(normalizeTextForFont(config.text), config.fontSize)
+  const glyphShapes = font.generateShapes(normalizeTextForFont(config.text, loadedBackFont), config.fontSize)
   if (glyphShapes.length === 0) {
     return []
   }
@@ -3601,15 +3803,17 @@ function centeredGlyphShapes(config: TagConfig): THREE.Shape[] {
     centeredShapes.push(centeredShape)
   })
 
-  return centeredShapes
+  return centeredShapes.map((shape) =>
+    cloneTransformedShape(shape, 1, config.textOffsetX, config.textOffsetY, Math.PI, 26),
+  )
 }
 
 function createEmbossTextMesh(config: TagConfig): THREE.Object3D | null {
-  if (!loadedFont) {
+  if (!loadedBackFont) {
     return null
   }
 
-  const textGeometries = createLaidOutTextGeometries(config, Math.abs(config.textDepth))
+  const textGeometries = createLaidOutTextGeometries(config, Math.abs(config.textDepth), loadedBackFont)
   if (textGeometries.length === 0) {
     return null
   }
@@ -3673,7 +3877,7 @@ function createDebossMeshesLegacy(config: TagConfig): THREE.Mesh[] {
 }
 
 function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
-  if (!loadedFont) {
+  if (!loadedBackFont) {
     return [createBaseMesh(config)]
   }
 
@@ -3681,7 +3885,11 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
     const baseMesh = createBaseMesh(config)
 
     const seamOverlap = 0.2
-    const textGeometries = createLaidOutTextGeometries(config, Math.abs(config.textDepth) + seamOverlap)
+    const textGeometries = createLaidOutTextGeometries(
+      config,
+      Math.abs(config.textDepth) + seamOverlap,
+      loadedBackFont,
+    )
     if (textGeometries.length === 0) {
       baseMesh.geometry.computeVertexNormals()
       return [baseMesh]
@@ -3780,7 +3988,7 @@ function createManifoldTagBase(config: TagConfig): THREE.Mesh {
   try {
     if (config.textDepth < -0.001) {
       const depth = Math.abs(config.textDepth)
-      createLaidOutTextGeometries(config, depth + 0.2).forEach((geometry) => {
+      createLaidOutTextGeometries(config, depth + 0.2, loadedBackFont).forEach((geometry) => {
         const cutter = new THREE.Mesh(geometry, baseMaterial)
         cutter.position.z = config.thickness - depth
         frontCutters.push(cutter)
@@ -3878,10 +4086,19 @@ function createExportTagObject(config: TagConfig): THREE.Group {
     addDetail(createTagLogoObject(config))
     addDetail(createBackLogoObject(config))
     modelGroup.rotation.y = Math.PI
+    modelGroup.rotation.z = Math.PI
     return modelGroup
   } catch (error) {
     disposeObjectDeep(modelGroup)
     throw error
+  }
+}
+
+function getOneSidedTagConfig(config: TagConfig): TagConfig {
+  return {
+    ...config,
+    text: '',
+    logoEnabled: false,
   }
 }
 
@@ -3890,21 +4107,24 @@ function createFlatTagObject(config: TagConfig): THREE.Group {
 }
 
 function createTag3dObject(config: TagConfig): THREE.Group {
-  // Kept as a separate factory so Tag 3D can evolve without changing the
-  // existing flat-tag implementation. Both models intentionally match today.
-  return createTagSurfaceObject(config)
+  return createTagSurfaceObject(getOneSidedTagConfig(config))
 }
 
 function rebuildTag(): void {
-  if (!loadedFont) {
-    return
-  }
-
   const config = getConfigFromForm()
   if (activeTagObject) {
     scene.remove(activeTagObject)
     disposeObjectDeep(activeTagObject)
     activeTagObject = null
+  }
+
+  if (
+    (config.modelType === 'dice' && !loadedFont) ||
+    (config.modelType === 'tag3d' && !loadedFrontFont) ||
+    (config.modelType !== 'dice' && config.modelType !== 'tag3d' && (!loadedFrontFont || !loadedBackFont))
+  ) {
+    updateExportAvailability(config)
+    return
   }
 
   const modelGroup = new THREE.Group()
@@ -3930,6 +4150,7 @@ function rebuildTag(): void {
   modelGroup.position.set(0, 0, 0)
   if (config.modelType === 'tag' || config.modelType === 'tag3d') {
     modelGroup.rotation.y = Math.PI
+    modelGroup.rotation.z = Math.PI
   }
   activeTagObject = modelGroup
   scene.add(activeTagObject)
@@ -3985,7 +4206,9 @@ function downloadStl(): void {
   let data: DataView
   try {
     if (config.modelType === 'tag' || config.modelType === 'tag3d') {
-      exportGroup.add(createExportTagObject(config))
+      exportGroup.add(createExportTagObject(
+        config.modelType === 'tag3d' ? getOneSidedTagConfig(config) : config,
+      ))
     } else if (config.modelType === 'dice') {
       exportGroup.add(createExportDiceObject(config))
     } else {
@@ -4058,12 +4281,17 @@ function readLastState(): PersistedAppState | null {
     return null
   }
 
-  const mergedConfig = { ...defaultConfig, ...parsed.config }
   const parsedFontChoice = parsed.fontChoice as FontChoice | undefined
   const fontChoice =
     parsedFontChoice && isBuiltinFontChoice(parsedFontChoice)
       ? parsedFontChoice
       : defaultFontChoice
+  const mergedConfig = {
+    ...defaultConfig,
+    ...parsed.config,
+    frontFontChoice: normalizeFontChoice(parsed.config.frontFontChoice, fontChoice),
+    backFontChoice: normalizeFontChoice(parsed.config.backFontChoice, fontChoice),
+  }
 
   return {
     config: mergedConfig,
@@ -4073,7 +4301,7 @@ function readLastState(): PersistedAppState | null {
 }
 
 function saveLastState(): void {
-  const selectedChoice = controlsMap.fontChoice.value as FontChoice
+  const selectedChoice = controlsMap.fontChoiceDice.value as FontChoice
   const fontChoice = isBuiltinFontChoice(selectedChoice) ? selectedChoice : defaultFontChoice
   const config = getConfigFromForm()
   if (config.modelType === 'tag' || config.modelType === 'tag3d' || config.modelType === 'puzzle') {
@@ -4103,6 +4331,12 @@ function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType
       shape: 'puzzle',
       width: puzzleSize,
       height: puzzleSize,
+      frontFontChoice: normalizeFontChoice(config.frontFontChoice, defaultFontChoice),
+      backFontChoice: normalizeFontChoice(config.backFontChoice, defaultFontChoice),
+      textOffsetX: config.textOffsetX ?? 0,
+      textOffsetY: config.textOffsetY ?? 0,
+      backTextOffsetX: config.backTextOffsetX ?? 0,
+      backTextOffsetY: config.backTextOffsetY ?? 0,
     }
   }
 
@@ -4114,7 +4348,13 @@ function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType
     width: clamp(config.width, 20, 120),
     height: clamp(config.height, 15, 60),
     thickness: clamp(config.thickness, 1.5, modelType === 'tag3d' ? 100 : 8),
-    holeDiameter: clamp(config.holeDiameter, modelType === 'tag3d' ? 0 : 2, 12),
+    holeDiameter: clamp(config.holeDiameter, 0, 12),
+    textOffsetX: config.textOffsetX ?? 0,
+    textOffsetY: config.textOffsetY ?? 0,
+    backTextOffsetX: config.backTextOffsetX ?? 0,
+    backTextOffsetY: config.backTextOffsetY ?? 0,
+    frontFontChoice: normalizeFontChoice(config.frontFontChoice, defaultFontChoice),
+    backFontChoice: normalizeFontChoice(config.backFontChoice, defaultFontChoice),
   }
 }
 
@@ -4161,6 +4401,10 @@ function wireEvents(): void {
     controlsMap.text,
     controlsMap.backText,
     controlsMap.textBold,
+    controlsMap.textOffsetX,
+    controlsMap.textOffsetY,
+    controlsMap.backTextOffsetX,
+    controlsMap.backTextOffsetY,
     controlsMap.backFontSize,
     controlsMap.backTextDepth,
     controlsMap.logoEnabled,
@@ -4291,6 +4535,20 @@ function wireEvents(): void {
     updateAllDiceFaceOptionVisibility()
   }
 
+  const updateDiceSphereRadiusForSize = (): void => {
+    const rawSize = controlsMap.diceSize.value.trim()
+    if (rawSize.length === 0) {
+      return
+    }
+    const diceSize = Number(rawSize)
+    if (!Number.isFinite(diceSize)) {
+      return
+    }
+    controlsMap.diceSphereRadius.value = String(getDefaultDiceSphereRadius(clamp(diceSize, 10, 60)))
+  }
+
+  controlsMap.diceSize.addEventListener('input', updateDiceSphereRadiusForSize)
+  controlsMap.diceSize.addEventListener('change', updateDiceSphereRadiusForSize)
   controlsMap.diceSize.addEventListener('input', refreshDiceFaceAvailability)
   controlsMap.diceSize.addEventListener('change', refreshDiceFaceAvailability)
   controlsMap.diceSideHoleDiameter.addEventListener('input', refreshDiceFaceAvailability)
@@ -4407,12 +4665,20 @@ function wireEvents(): void {
     simplifyAllLoadedDiceSvg()
   })
 
-  controlsMap.fontChoice.addEventListener('change', () => {
-    applySelectedFontChoice(controlsMap.fontChoice.value as FontChoice)
+  controlsMap.frontFontChoice.addEventListener('change', () => {
+    applySideFontChoice('front', controlsMap.frontFontChoice.value as FontChoice)
+  })
+
+  controlsMap.backFontChoice.addEventListener('change', () => {
+    applySideFontChoice('back', controlsMap.backFontChoice.value as FontChoice)
   })
 
   controlsMap.fontChoiceDice.addEventListener('change', () => {
-    applySelectedFontChoice(controlsMap.fontChoiceDice.value as FontChoice)
+    const choice = controlsMap.fontChoiceDice.value as FontChoice
+    if (isBuiltinFontChoice(choice)) {
+      saveLastState()
+      void applyBuiltinFont(choice)
+    }
   })
 
   controlsMap.languageSelect.addEventListener('change', () => {
@@ -4420,12 +4686,20 @@ function wireEvents(): void {
     void setLanguage(nextLanguage)
   })
 
-  controlsMap.customFontFile.addEventListener('change', () => {
-    const file = controlsMap.customFontFile.files?.[0]
+  controlsMap.frontCustomFontFile.addEventListener('change', () => {
+    const file = controlsMap.frontCustomFontFile.files?.[0]
     if (!file) {
       return
     }
-    void applyCustomFontFromFile(file)
+    void applyCustomSideFontFromFile('front', file)
+  })
+
+  controlsMap.backCustomFontFile.addEventListener('change', () => {
+    const file = controlsMap.backCustomFontFile.files?.[0]
+    if (!file) {
+      return
+    }
+    void applyCustomSideFontFromFile('back', file)
   })
 
   controlsMap.exportBtn.addEventListener('click', downloadStl)
@@ -4516,7 +4790,6 @@ async function start(): Promise<void> {
   applyConfigToForm(initialConfig)
   currentModelTypeSelection = initialConfig.modelType
   if (persistedState) {
-    controlsMap.fontChoice.value = persistedState.fontChoice
     controlsMap.fontChoiceDice.value = persistedState.fontChoice
   }
 
@@ -4529,7 +4802,7 @@ async function start(): Promise<void> {
   updateCustomFontVisibility()
   updateLogoControlsVisibility()
   updateBackLogoControlsVisibility()
-  const initialFontChoice = controlsMap.fontChoice.value as FontChoice
+  const initialFontChoice = controlsMap.fontChoiceDice.value as FontChoice
   const fontToLoad = isBuiltinFontChoice(initialFontChoice) ? initialFontChoice : defaultFontChoice
   void applyBuiltinFont(fontToLoad)
   try {

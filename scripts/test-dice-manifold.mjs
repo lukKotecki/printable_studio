@@ -6,7 +6,15 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import createManifold from 'manifold-3d'
 import { subtractSolidMeshes } from '../src/models/manifold-boolean.ts'
+import { defaultConfig, getDefaultDiceSphereRadius } from '../src/config/app-config.ts'
 import { assertClosedStl, volume } from './mesh-test-utils.mjs'
+
+assert.equal(defaultConfig.diceSphereRadius, 13.3)
+assert.deepEqual(
+  [0, 10, 15, 20, 30].map(getDefaultDiceSphereRadius),
+  [0, 6.3, 9.8, 13.3, 20.3],
+  'dice sphere radius should use the rounded-up linear size formula',
+)
 
 const engine = await createManifold()
 engine.setup()

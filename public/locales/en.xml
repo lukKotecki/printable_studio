@@ -4,8 +4,8 @@
   <entry key="app.subtitle">Local 3D tag generator with STL export.</entry>
   <entry key="language.aria">Language</entry>
   <entry key="form.modelType">Model type</entry>
-  <entry key="model.tag">Flat tag</entry>
-  <entry key="model.tag3d">Tag 3D</entry>
+  <entry key="model.tag">Two-sided tag</entry>
+  <entry key="model.tag3d">One-sided tag</entry>
   <entry key="model.puzzle">Puzzle (beta)</entry>
   <entry key="model.dice">D6 Dice (beta)</entry>
   <entry key="form.font">Font</entry>
@@ -30,7 +30,7 @@
   <entry key="tag.height">Height (mm)</entry>
   <entry key="tag.thickness">Thickness (mm)</entry>
   <entry key="tag.cornerRadius">Corner radius (mm)</entry>
-  <entry key="tag.holeDiameter">Hole diameter (mm)</entry>
+  <entry key="tag.holeDiameter">Hole diameter (mm, 0 = none)</entry>
   <entry key="tag.holeMargin">Hole margin (mm)</entry>
   <entry key="tag.holeOffsetX">Hole offset X (mm)</entry>
   <entry key="tag.holeOffsetY">Hole offset Y (mm)</entry>
@@ -39,6 +39,8 @@
   <entry key="tag.text.placeholder">Enter a few lines of text</entry>
   <entry key="tag.front.textDepth">Back text depth (mm, negative = debossed)</entry>
   <entry key="tag.front.fontSize">Back text size (mm)</entry>
+  <entry key="tag.front.textOffsetX">Text offset X (mm)</entry>
+  <entry key="tag.front.textOffsetY">Text offset Y (mm)</entry>
   <entry key="text.bold">Bold text</entry>
   <entry key="tag.front.logoEnabled">Add SVG/PNG logo</entry>
   <entry key="tag.front.logoFile">Logo file (SVG or PNG)</entry>
@@ -51,6 +53,8 @@
   <entry key="tag.back.text">Text</entry>
   <entry key="tag.back.textDepth">Front text depth (mm, negative = debossed)</entry>
   <entry key="tag.back.fontSize">Front text size (mm)</entry>
+  <entry key="tag.back.textOffsetX">Text offset X (mm)</entry>
+  <entry key="tag.back.textOffsetY">Text offset Y (mm)</entry>
   <entry key="tag.back.logoEnabled">Add SVG/PNG logo</entry>
   <entry key="tag.back.logoFile">Logo file (SVG or PNG)</entry>
   <entry key="tag.back.logoSize">Logo size (mm)</entry>
@@ -61,7 +65,7 @@
   <entry key="dice.size">Dice size (mm)</entry>
   <entry key="dice.roundness">Edge roundness (mm)</entry>
   <entry key="dice.sideHoleDiameter">Side through-hole diameter (mm, 0 = none)</entry>
-  <entry key="dice.sphereRadius">Preview sphere radius (mm)</entry>
+  <entry key="dice.sphereRadius">Sphere corner rounding (mm)</entry>
   <entry key="dice.params.summary">Dice parameters</entry>
   <entry key="dice.preview.summary">Advanced</entry>
   <entry key="dice.preview.showCube">Show cube</entry>

@@ -15,6 +15,8 @@ export interface TagConfig {
   modelType: ModelType
   text: string
   backText: string
+  frontFontChoice: FontChoice
+  backFontChoice: FontChoice
   shape: TagShape
   width: number
   height: number
@@ -26,6 +28,10 @@ export interface TagConfig {
   holeOffsetY: number
   fontSize: number
   backFontSize: number
+  textOffsetX: number
+  textOffsetY: number
+  backTextOffsetX: number
+  backTextOffsetY: number
   textDepth: number
   backTextDepth: number
   textBold: boolean
@@ -97,28 +103,38 @@ export const maxTextLines = 4
 export const maxCharsPerLine = 18
 export const textLineSpacingFactor = 1.2
 
+export function getDefaultDiceSphereRadius(diceSize: number): number {
+  return Math.max(0, Math.ceil((0.7 * diceSize - 0.7) * 10) / 10)
+}
+
 export const defaultConfig: TagConfig = {
   modelType: 'tag',
-  text: 'LUNA',
-  backText: '',
+  text: '111 222 333',
+  backText: 'Call if found',
+  frontFontChoice: 'helvetiker',
+  backFontChoice: 'helvetiker',
   shape: 'rounded',
-  width: 62,
-  height: 28,
+  width: 83,
+  height: 17,
   thickness: 3,
   cornerRadius: 5,
-  holeDiameter: 5,
+  holeDiameter: 4.5,
   holeMargin: 6,
-  holeOffsetX: 0,
-  holeOffsetY: 0,
+  holeOffsetX: -4,
+  holeOffsetY: -4,
   fontSize: 9,
-  textDepth: 1,
+  textOffsetX: 2.5,
+  textOffsetY: 0,
+  backTextOffsetX: -2.5,
+  backTextOffsetY: 0,
+  textDepth: -1,
   backTextDepth: 1,
   backFontSize: 9,
   textBold: false,
   diceSize: 20,
   diceRoundness: 2,
   diceSideHoleDiameter: 0,
-  diceSphereRadius: 13.3,
+  diceSphereRadius: getDefaultDiceSphereRadius(20),
   diceClipWithSphere: false,
   diceShowCube: true,
   diceShowText: true,
