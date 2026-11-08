@@ -30,10 +30,14 @@ export interface TagConfig {
   backFontSize: number
   textOffsetX: number
   textOffsetY: number
+  textLetterSpacing: number
   backTextOffsetX: number
   backTextOffsetY: number
+  backTextLetterSpacing: number
   textDepth: number
   backTextDepth: number
+  frontTextBold: boolean
+  backTextBold: boolean
   textBold: boolean
   diceSize: number
   diceRoundness: number
@@ -125,17 +129,21 @@ export const defaultConfig: TagConfig = {
   fontSize: 9,
   textOffsetX: 2.5,
   textOffsetY: 0,
+  textLetterSpacing: 0,
   backTextOffsetX: -2.5,
   backTextOffsetY: 0,
+  backTextLetterSpacing: 0,
   textDepth: -1,
   backTextDepth: 1,
   backFontSize: 9,
+  frontTextBold: false,
+  backTextBold: false,
   textBold: false,
   diceSize: 20,
   diceRoundness: 2,
   diceSideHoleDiameter: 0,
   diceSphereRadius: getDefaultDiceSphereRadius(20),
-  diceClipWithSphere: false,
+  diceClipWithSphere: true,
   diceShowCube: true,
   diceShowText: true,
   diceShowSphere: false,

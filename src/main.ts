@@ -234,6 +234,18 @@ app.innerHTML = `
           </div>
 
           <div class="field">
+            <label class="field-inline" for="frontTextBold">
+              <input id="frontTextBold" type="checkbox" ${defaultConfig.frontTextBold ? 'checked' : ''} />
+              <span>Pogrubienie tekstu</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label for="backTextLetterSpacing">Odstęp między literami (mm)</label>
+            <input id="backTextLetterSpacing" type="number" min="-5" max="10" step="0.1" value="${defaultConfig.backTextLetterSpacing}" />
+          </div>
+
+          <div class="field">
             <label for="backTextDepth">Glebokosc tekstu awersu (mm, ujemna = wklesly)</label>
             <input id="backTextDepth" type="number" min="-20" max="20" step="0.1" value="${defaultConfig.backTextDepth}" />
           </div>
@@ -316,6 +328,18 @@ app.innerHTML = `
           <div class="field">
             <label for="text">Napis</label>
             <textarea id="text" rows="3" placeholder="Wpisz kilka linii tekstu">${defaultConfig.text}</textarea>
+          </div>
+
+          <div class="field">
+            <label class="field-inline" for="backTextBold">
+              <input id="backTextBold" type="checkbox" ${defaultConfig.backTextBold ? 'checked' : ''} />
+              <span>Pogrubienie tekstu</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label for="textLetterSpacing">Odstęp między literami (mm)</label>
+            <input id="textLetterSpacing" type="number" min="-5" max="10" step="0.1" value="${defaultConfig.textLetterSpacing}" />
           </div>
 
           <div class="field">
@@ -766,6 +790,10 @@ const controlsMap = {
   diceControls: requiredElement<HTMLDivElement>('#diceControls'),
   text: requiredElement<HTMLTextAreaElement>('#text'),
   backText: requiredElement<HTMLTextAreaElement>('#backText'),
+  frontTextBold: requiredElement<HTMLInputElement>('#frontTextBold'),
+  backTextBold: requiredElement<HTMLInputElement>('#backTextBold'),
+  textLetterSpacing: requiredElement<HTMLInputElement>('#textLetterSpacing'),
+  backTextLetterSpacing: requiredElement<HTMLInputElement>('#backTextLetterSpacing'),
   textBold: requiredElement<HTMLInputElement>('#textBold'),
   textOffsetX: requiredElement<HTMLInputElement>('#textOffsetX'),
   textOffsetY: requiredElement<HTMLInputElement>('#textOffsetY'),
@@ -1091,6 +1119,8 @@ function applyStaticTranslations(): void {
   setAttr('#text', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
   setText('label[for="textDepth"]', 'tag.front.textDepth', 'Glebokosc tekstu rewersu (mm, ujemna = wklesly)')
   setText('label[for="fontSize"]', 'tag.front.fontSize', 'Rozmiar tekstu rewersu (mm)')
+  setText('#backTextBold + span', 'tag.rewers.textBold', 'Pogrubienie tekstu (przy eksporcie)')
+  setText('label[for="textLetterSpacing"]', 'tag.rewers.letterSpacing', 'Odstep miedzy literami (mm)')
   setText('label[for="textOffsetX"]', 'tag.front.textOffsetX', 'Przesuniecie napisu X (mm)')
   setText('label[for="textOffsetY"]', 'tag.front.textOffsetY', 'Przesuniecie napisu Y (mm)')
   setText('#textBold + span', 'text.bold', 'Pogrubienie tekstu')
@@ -1107,6 +1137,8 @@ function applyStaticTranslations(): void {
   setAttr('#backText', 'placeholder', 'tag.text.placeholder', 'Wpisz kilka linii tekstu')
   setText('label[for="backTextDepth"]', 'tag.back.textDepth', 'Glebokosc tekstu awersu (mm, ujemna = wklesly)')
   setText('label[for="backFontSize"]', 'tag.back.fontSize', 'Rozmiar tekstu awersu (mm)')
+  setText('#frontTextBold + span', 'tag.awers.textBold', 'Pogrubienie tekstu (przy eksporcie)')
+  setText('label[for="backTextLetterSpacing"]', 'tag.awers.letterSpacing', 'Odstep miedzy literami (mm)')
   setText('label[for="backTextOffsetX"]', 'tag.back.textOffsetX', 'Przesuniecie napisu X (mm)')
   setText('label[for="backTextOffsetY"]', 'tag.back.textOffsetY', 'Przesuniecie napisu Y (mm)')
   setText('#backLogoEnabled + span', 'tag.back.logoEnabled', 'Dodaj logo SVG/PNG')
@@ -2486,6 +2518,53 @@ function isClosedTwoManifoldGeometry(geometry: THREE.BufferGeometry): boolean {
   return edgeCounts.size > 0 && [...edgeCounts.values()].every((count) => count === 2)
 }
 
+function getFontGlyphAdvance(font: unknown, character: string, fontSize: number): number {
+  const fontData = (font as {
+    data?: {
+      glyphs?: Record<string, { ha?: number }>
+      resolution?: number
+    }
+  }).data
+  const glyph = fontData?.glyphs?.[character]
+  if (glyph?.ha !== undefined && fontData?.resolution) {
+    return (glyph.ha / fontData.resolution) * fontSize
+  }
+  return fontSize * 0.5
+}
+
+function createSpacedTextGeometries(
+  line: string,
+  font: unknown,
+  fontSize: number,
+  depth: number,
+  letterSpacing: number,
+): TextGeometry[] {
+  const characters = Array.from(line)
+  let cursorX = 0
+  const geometries: TextGeometry[] = []
+
+  characters.forEach((character, index) => {
+    const geometry = new TextGeometry(character, {
+      font: font as never,
+      size: fontSize,
+      depth,
+      curveSegments: 18,
+      bevelEnabled: false,
+    })
+    const advance = getFontGlyphAdvance(font, character, fontSize)
+    if (geometry.getAttribute('position').count > 0) {
+      geometry.translate(cursorX, 0, 0)
+      geometry.computeBoundingBox()
+      geometries.push(geometry)
+    } else {
+      geometry.dispose()
+    }
+    cursorX += advance + (index < characters.length - 1 ? letterSpacing : 0)
+  })
+
+  return geometries
+}
+
 function createLaidOutTextGeometries(config: TagConfig, depth: number, font: unknown | null): TextGeometry[] {
   if (!font) {
     return []
@@ -2507,32 +2586,38 @@ function createLaidOutTextGeometries(config: TagConfig, depth: number, font: unk
       return
     }
 
-    const geometry = new TextGeometry(normalizedLine, {
-      font: font as never,
-      size: config.fontSize,
-      depth,
-      curveSegments: 18,
-      bevelEnabled: false,
+    const lineGeometries = config.textLetterSpacing === 0
+      ? [new TextGeometry(normalizedLine, {
+        font: font as never,
+        size: config.fontSize,
+        depth,
+        curveSegments: 18,
+        bevelEnabled: false,
+      })]
+      : createSpacedTextGeometries(normalizedLine, font, config.fontSize, depth, config.textLetterSpacing)
+    const lineBounds = new THREE.Box3()
+    lineGeometries.forEach((geometry) => {
+      geometry.computeBoundingBox()
+      if (geometry.boundingBox) lineBounds.union(geometry.boundingBox)
     })
-
-    geometry.computeBoundingBox()
-    const box = geometry.boundingBox
-    if (!box) {
-      geometry.dispose()
+    if (lineBounds.isEmpty()) {
+      lineGeometries.forEach((geometry) => geometry.dispose())
       return
     }
 
-    const centerX = (box.max.x + box.min.x) / 2
-    const centerY = (box.max.y + box.min.y) / 2
+    const centerX = (lineBounds.max.x + lineBounds.min.x) / 2
+    const centerY = (lineBounds.max.y + lineBounds.min.y) / 2
     const lineOffsetY = verticalCenterOffset - index * lineSpacing
 
-    minX = Math.min(minX, box.min.x - centerX)
-    maxX = Math.max(maxX, box.max.x - centerX)
-    minY = Math.min(minY, box.min.y - centerY + lineOffsetY)
-    maxY = Math.max(maxY, box.max.y - centerY + lineOffsetY)
+    minX = Math.min(minX, lineBounds.min.x - centerX)
+    maxX = Math.max(maxX, lineBounds.max.x - centerX)
+    minY = Math.min(minY, lineBounds.min.y - centerY + lineOffsetY)
+    maxY = Math.max(maxY, lineBounds.max.y - centerY + lineOffsetY)
 
-    geometry.translate(-centerX, -centerY + lineOffsetY, 0)
-    geometries.push(geometry)
+    lineGeometries.forEach((geometry) => {
+      geometry.translate(-centerX, -centerY + lineOffsetY, 0)
+      geometries.push(geometry)
+    })
   })
 
   if (geometries.length === 0) {
@@ -2543,7 +2628,7 @@ function createLaidOutTextGeometries(config: TagConfig, depth: number, font: unk
   const overallCenterY = (minY + maxY) / 2
   geometries.forEach((geometry) => geometry.translate(-overallCenterX, -overallCenterY, 0))
 
-  const laidOutGeometries = applyTextBoldToGeometries(geometries, config.fontSize, config.textBold)
+  const laidOutGeometries = applyTextBoldToGeometries(geometries, config.fontSize, config.backTextBold)
   laidOutGeometries.forEach((geometry) => {
     geometry.rotateZ(Math.PI)
     geometry.translate(config.textOffsetX, config.textOffsetY, 0)
@@ -2795,6 +2880,8 @@ function createBackTextObject(config: TagConfig): THREE.Object3D | null {
     fontSize: config.backFontSize,
     textOffsetX: config.backTextOffsetX,
     textOffsetY: config.backTextOffsetY,
+    textLetterSpacing: config.backTextLetterSpacing,
+    backTextBold: config.frontTextBold,
   }
   const textGeometries = createLaidOutTextGeometries(sideConfig, Math.abs(config.backTextDepth), loadedFrontFont)
   if (textGeometries.length === 0) {
@@ -2826,6 +2913,8 @@ function createBackTextCutters(config: TagConfig): THREE.Mesh[] {
     fontSize: config.backFontSize,
     textOffsetX: config.backTextOffsetX,
     textOffsetY: config.backTextOffsetY,
+    textLetterSpacing: config.backTextLetterSpacing,
+    backTextBold: config.frontTextBold,
   }
   const textGeometries = createLaidOutTextGeometries(sideConfig, cutterDepth, loadedFrontFont)
 
@@ -2925,7 +3014,20 @@ function createLaidOutTextShapes(config: TagConfig, font: unknown | null): THREE
       return
     }
 
-    const lineShapes = textFont.generateShapes(normalizedLine, config.fontSize)
+    const lineShapes: THREE.Shape[] = []
+    if (config.textLetterSpacing === 0) {
+      lineShapes.push(...textFont.generateShapes(normalizedLine, config.fontSize))
+    } else {
+      let cursorX = 0
+      const characters = Array.from(normalizedLine)
+      characters.forEach((character, characterIndex) => {
+        textFont.generateShapes(character, config.fontSize).forEach((shape) => {
+          lineShapes.push(cloneShiftedShape(shape, cursorX, 0))
+        })
+        cursorX += getFontGlyphAdvance(font, character, config.fontSize)
+          + (characterIndex < characters.length - 1 ? config.textLetterSpacing : 0)
+      })
+    }
     if (lineShapes.length === 0) {
       return
     }
@@ -3034,10 +3136,14 @@ function getConfigFromForm(): TagConfig {
   const thickness = clamp(Number(controlsMap.thickness.value), 1.5, modelType === 'tag3d' ? 100 : 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
+  const frontTextBold = controlsMap.frontTextBold.checked
+  const backTextBold = controlsMap.backTextBold.checked
   const textOffsetX = clamp(Number(controlsMap.textOffsetX.value), -60, 60)
   const textOffsetY = clamp(Number(controlsMap.textOffsetY.value), -60, 60)
+  const textLetterSpacing = clamp(Number(controlsMap.textLetterSpacing.value), -5, 10)
   const backTextOffsetX = clamp(Number(controlsMap.backTextOffsetX.value), -60, 60)
   const backTextOffsetY = clamp(Number(controlsMap.backTextOffsetY.value), -60, 60)
+  const backTextLetterSpacing = clamp(Number(controlsMap.backTextLetterSpacing.value), -5, 10)
   const textBold = controlsMap.textBold.checked
   const maxCorner = Math.min(width, height) * 0.49
   const text = sanitizeTextInput(controlsMap.text.value)
@@ -3121,10 +3227,14 @@ function getConfigFromForm(): TagConfig {
     backFontSize: clamp(Number(controlsMap.backFontSize.value), 4, 22),
     textDepth,
     backTextDepth,
+    frontTextBold,
+    backTextBold,
     textOffsetX,
     textOffsetY,
+    textLetterSpacing,
     backTextOffsetX,
     backTextOffsetY,
+    backTextLetterSpacing,
     textBold,
     diceSize,
     diceRoundness,
@@ -3261,10 +3371,14 @@ function applyConfigToForm(config: TagConfig): void {
   controlsMap.backFontSize.value = String(config.backFontSize)
   controlsMap.textDepth.value = String(config.textDepth)
   controlsMap.backTextDepth.value = String(config.backTextDepth)
+  controlsMap.frontTextBold.checked = Boolean(config.frontTextBold)
+  controlsMap.backTextBold.checked = Boolean(config.backTextBold)
   controlsMap.textOffsetX.value = String(config.textOffsetX)
   controlsMap.textOffsetY.value = String(config.textOffsetY)
+  controlsMap.textLetterSpacing.value = String(config.textLetterSpacing ?? 0)
   controlsMap.backTextOffsetX.value = String(config.backTextOffsetX)
   controlsMap.backTextOffsetY.value = String(config.backTextOffsetY)
+  controlsMap.backTextLetterSpacing.value = String(config.backTextLetterSpacing ?? 0)
   controlsMap.textBold.checked = Boolean(config.textBold)
   controlsMap.logoEnabled.checked = Boolean(config.logoEnabled)
   controlsMap.logoSize.value = String(config.logoSize)
@@ -3767,45 +3881,7 @@ function shapeFromPoints(points: THREE.Vector2[]): THREE.Shape {
 }
 
 function centeredGlyphShapes(config: TagConfig): THREE.Shape[] {
-  if (!loadedBackFont) {
-    return []
-  }
-
-  const font = loadedBackFont as {
-    generateShapes: (text: string, size: number) => THREE.Shape[]
-  }
-  const glyphShapes = font.generateShapes(normalizeTextForFont(config.text, loadedBackFont), config.fontSize)
-  if (glyphShapes.length === 0) {
-    return []
-  }
-
-  const bounds = new THREE.Box2(
-    new THREE.Vector2(Infinity, Infinity),
-    new THREE.Vector2(-Infinity, -Infinity),
-  )
-
-  glyphShapes.forEach((shape) => {
-    shape.getPoints(24).forEach((p) => bounds.expandByPoint(p))
-  })
-
-  const center = new THREE.Vector2((bounds.min.x + bounds.max.x) / 2, (bounds.min.y + bounds.max.y) / 2)
-  const centeredShapes: THREE.Shape[] = []
-
-  glyphShapes.forEach((sourceShape) => {
-    const outer = sourceShape.getPoints(26).map((p) => new THREE.Vector2(p.x - center.x, p.y - center.y))
-    const centeredShape = shapeFromPoints(outer)
-
-    sourceShape.holes.forEach((holePath) => {
-      const hole = holePath.getPoints(26).map((p) => new THREE.Vector2(p.x - center.x, p.y - center.y))
-      centeredShape.holes.push(pathFromPoints(hole))
-    })
-
-    centeredShapes.push(centeredShape)
-  })
-
-  return centeredShapes.map((shape) =>
-    cloneTransformedShape(shape, 1, config.textOffsetX, config.textOffsetY, Math.PI, 26),
-  )
+  return createLaidOutTextShapes(config, loadedBackFont)
 }
 
 function createEmbossTextMesh(config: TagConfig): THREE.Object3D | null {
@@ -3921,9 +3997,8 @@ function createDebossMeshes(config: TagConfig): THREE.Mesh[] {
 
     const debossMesh = CSG.subtract(baseMesh, mergedCutter)
     if (!isClosedTwoManifoldGeometry(debossMesh.geometry)) {
-      debossMesh.geometry.dispose()
       mergedCutter.geometry.dispose()
-
+      debossMesh.geometry.dispose()
       // The legacy construction uses independently closed extrusions and is
       // more reliable for shallow engraving. A through-cut cannot use it,
       // because it would create a zero-height lower extrusion.
@@ -4103,11 +4178,19 @@ function getOneSidedTagConfig(config: TagConfig): TagConfig {
 }
 
 function createFlatTagObject(config: TagConfig): THREE.Group {
-  return createTagSurfaceObject(config)
+  return createTagSurfaceObject(getTagPreviewConfig(config))
 }
 
 function createTag3dObject(config: TagConfig): THREE.Group {
-  return createTagSurfaceObject(getOneSidedTagConfig(config))
+  return createTagSurfaceObject(getOneSidedTagConfig(getTagPreviewConfig(config)))
+}
+
+function getTagPreviewConfig(config: TagConfig): TagConfig {
+  return {
+    ...config,
+    frontTextBold: false,
+    backTextBold: false,
+  }
 }
 
 function rebuildTag(): void {
@@ -4260,7 +4343,8 @@ function downloadStl(): void {
     const min = String(now.getMinutes()).padStart(2, '0')
     link.download = `DICE_D6_${dd}-${mm}-${yyyy}_${hh}:${min}.stl`
   } else {
-    link.download = `${config.text.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
+    const fileText = config.modelType === 'tag3d' ? config.backText : config.text
+    link.download = `${fileText.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
   }
 
   link.click()
@@ -4273,6 +4357,13 @@ function readPresets(): Record<string, TagConfig> {
 
 function writePresets(presets: Record<string, TagConfig>): void {
   writePresetsToStorage(presetsStorageKey, presets)
+}
+
+function migrateOneSidedDefault(config: TagConfig): TagConfig {
+  if (config.modelType === 'tag3d' && config.text === 'Marianne' && config.backText === defaultConfig.backText) {
+    return { ...config, backText: 'Marianne' }
+  }
+  return config
 }
 
 function readLastState(): PersistedAppState | null {
@@ -4288,9 +4379,11 @@ function readLastState(): PersistedAppState | null {
       : defaultFontChoice
   const mergedConfig = {
     ...defaultConfig,
-    ...parsed.config,
+    ...migrateOneSidedDefault(parsed.config),
     frontFontChoice: normalizeFontChoice(parsed.config.frontFontChoice, fontChoice),
     backFontChoice: normalizeFontChoice(parsed.config.backFontChoice, fontChoice),
+    frontTextBold: parsed.config.frontTextBold ?? false,
+    backTextBold: parsed.config.backTextBold ?? parsed.config.textBold ?? false,
   }
 
   return {
@@ -4322,6 +4415,14 @@ function saveLastState(): void {
 
 type TagDraftModelType = 'tag' | 'tag3d' | 'puzzle'
 
+function getDefaultConfigForModel(modelType: TagDraftModelType): TagConfig {
+  return {
+    ...defaultConfig,
+    modelType,
+    ...(modelType === 'tag3d' ? { backText: 'Marianne' } : {}),
+  }
+}
+
 function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType): TagConfig {
   if (modelType === 'puzzle') {
     const puzzleSize = clamp(config.width, 20, 120)
@@ -4335,8 +4436,12 @@ function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType
       backFontChoice: normalizeFontChoice(config.backFontChoice, defaultFontChoice),
       textOffsetX: config.textOffsetX ?? 0,
       textOffsetY: config.textOffsetY ?? 0,
+      textLetterSpacing: config.textLetterSpacing ?? 0,
       backTextOffsetX: config.backTextOffsetX ?? 0,
       backTextOffsetY: config.backTextOffsetY ?? 0,
+      backTextLetterSpacing: config.backTextLetterSpacing ?? 0,
+      frontTextBold: config.frontTextBold ?? false,
+      backTextBold: config.backTextBold ?? config.textBold ?? false,
     }
   }
 
@@ -4351,8 +4456,12 @@ function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType
     holeDiameter: clamp(config.holeDiameter, 0, 12),
     textOffsetX: config.textOffsetX ?? 0,
     textOffsetY: config.textOffsetY ?? 0,
+    textLetterSpacing: config.textLetterSpacing ?? 0,
     backTextOffsetX: config.backTextOffsetX ?? 0,
     backTextOffsetY: config.backTextOffsetY ?? 0,
+    backTextLetterSpacing: config.backTextLetterSpacing ?? 0,
+    frontTextBold: config.frontTextBold ?? false,
+    backTextBold: config.backTextBold ?? config.textBold ?? false,
     frontFontChoice: normalizeFontChoice(config.frontFontChoice, defaultFontChoice),
     backFontChoice: normalizeFontChoice(config.backFontChoice, defaultFontChoice),
   }
@@ -4400,11 +4509,15 @@ function wireEvents(): void {
     controlsMap.modelType,
     controlsMap.text,
     controlsMap.backText,
+    controlsMap.frontTextBold,
+    controlsMap.backTextBold,
     controlsMap.textBold,
     controlsMap.textOffsetX,
     controlsMap.textOffsetY,
+    controlsMap.textLetterSpacing,
     controlsMap.backTextOffsetX,
     controlsMap.backTextOffsetY,
+    controlsMap.backTextLetterSpacing,
     controlsMap.backFontSize,
     controlsMap.backTextDepth,
     controlsMap.logoEnabled,
@@ -4707,7 +4820,7 @@ function wireEvents(): void {
   controlsMap.resetBtn.addEventListener('click', () => {
     const activeModelType = controlsMap.modelType.value as ModelType
     if (activeModelType === 'tag' || activeModelType === 'tag3d' || activeModelType === 'puzzle') {
-      const resetConfig = normalizeConfigForModel(defaultConfig, activeModelType)
+      const resetConfig = normalizeConfigForModel(getDefaultConfigForModel(activeModelType), activeModelType)
       modelDraftByType[activeModelType] = resetConfig
       applyConfigToForm(resetConfig)
     } else {
@@ -4779,7 +4892,9 @@ async function start(): Promise<void> {
       'tag',
     ),
     tag3d: normalizeConfigForModel(
-      savedDrafts?.tag3d ?? (initialConfig.modelType === 'tag3d' ? initialConfig : defaultConfig),
+      migrateOneSidedDefault(
+        savedDrafts?.tag3d ?? (initialConfig.modelType === 'tag3d' ? initialConfig : getDefaultConfigForModel('tag3d')),
+      ),
       'tag3d',
     ),
     puzzle: normalizeConfigForModel(

@@ -41,6 +41,8 @@
   <entry key="tag.front.fontSize">Back text size (mm)</entry>
   <entry key="tag.front.textOffsetX">Text offset X (mm)</entry>
   <entry key="tag.front.textOffsetY">Text offset Y (mm)</entry>
+  <entry key="tag.rewers.letterSpacing">Letter spacing (mm)</entry>
+  <entry key="tag.rewers.textBold">Bold text (on export)</entry>
   <entry key="text.bold">Bold text</entry>
   <entry key="tag.front.logoEnabled">Add SVG/PNG logo</entry>
   <entry key="tag.front.logoFile">Logo file (SVG or PNG)</entry>
@@ -55,6 +57,8 @@
   <entry key="tag.back.fontSize">Front text size (mm)</entry>
   <entry key="tag.back.textOffsetX">Text offset X (mm)</entry>
   <entry key="tag.back.textOffsetY">Text offset Y (mm)</entry>
+  <entry key="tag.awers.letterSpacing">Letter spacing (mm)</entry>
+  <entry key="tag.awers.textBold">Bold text (on export)</entry>
   <entry key="tag.back.logoEnabled">Add SVG/PNG logo</entry>
   <entry key="tag.back.logoFile">Logo file (SVG or PNG)</entry>
   <entry key="tag.back.logoSize">Logo size (mm)</entry>
