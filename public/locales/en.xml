@@ -105,6 +105,11 @@
   <entry key="presets.delete">Delete preset</entry>
   <entry key="presets.load">Load preset</entry>
   <entry key="presets.selectPlaceholder">-- select --</entry>
+  <entry key="share.button">Share settings via link</entry>
+  <entry key="share.note">Uploaded SVG/PNG files and custom fonts are not included in the link.</entry>
+  <entry key="share.link.label">Settings sharing link</entry>
+  <entry key="share.copied">Link copied to clipboard.</entry>
+  <entry key="share.copyFallback">Could not copy the link automatically. Copy it from the field below.</entry>
   <entry key="accessibility.panelResize">Resize panel width</entry>
   <entry key="accessibility.viewer">3D preview</entry>
   <entry key="viewer.legend.rotate">Left mouse: rotate</entry>

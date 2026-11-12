@@ -167,11 +167,11 @@ app.innerHTML = `
           <div class="grid-2">
             <div class="field">
               <label for="width">Szerokosc (mm)</label>
-              <input id="width" type="number" min="20" max="120" step="1" value="${defaultConfig.width}" />
+              <input id="width" type="number" min="1" max="300" step="1" value="${defaultConfig.width}" />
             </div>
             <div class="field">
               <label for="height">Wysokosc (mm)</label>
-              <input id="height" type="number" min="15" max="60" step="1" value="${defaultConfig.height}" />
+              <input id="height" type="number" min="1" max="300" step="1" value="${defaultConfig.height}" />
             </div>
           </div>
 
@@ -286,7 +286,7 @@ app.innerHTML = `
             </div>
             <div class="field">
               <label for="backLogoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
-              <input id="backLogoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.backLogoDepth}" />
+              <input id="backLogoDepth" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.backLogoDepth}" />
             </div>
             <div class="field">
               <label for="backLogoOffsetX">Przesuniecie logo X (mm)</label>
@@ -383,7 +383,7 @@ app.innerHTML = `
             </div>
             <div class="field">
               <label for="logoDepth">Glebokosc logo (mm, ujemna = wklesle)</label>
-              <input id="logoDepth" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.logoDepth}" />
+              <input id="logoDepth" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.logoDepth}" />
             </div>
             <div class="field">
               <label for="logoOffsetX">Przesuniecie logo X (mm)</label>
@@ -459,7 +459,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth1">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth1" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth1}" />
+                  <input id="diceFaceLogoDepth1" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth1}" />
                 </div>
                 <small id="diceFaceLogoStatus1">SVG: brak</small>
               </div>
@@ -504,7 +504,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth2">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth2" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth2}" />
+                  <input id="diceFaceLogoDepth2" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth2}" />
                 </div>
                 <small id="diceFaceLogoStatus2">SVG: brak</small>
               </div>
@@ -552,7 +552,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth3">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth3" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth3}" />
+                  <input id="diceFaceLogoDepth3" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth3}" />
                 </div>
                 <small id="diceFaceLogoStatus3">SVG: brak</small>
               </div>
@@ -597,7 +597,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth4">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth4" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth4}" />
+                  <input id="diceFaceLogoDepth4" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth4}" />
                 </div>
                 <small id="diceFaceLogoStatus4">SVG: brak</small>
               </div>
@@ -645,7 +645,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth5">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth5" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth5}" />
+                  <input id="diceFaceLogoDepth5" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth5}" />
                 </div>
                 <small id="diceFaceLogoStatus5">SVG: brak</small>
               </div>
@@ -690,7 +690,7 @@ app.innerHTML = `
                 </div>
                 <div class="face-option-row">
                   <label for="diceFaceLogoDepth6">Glebokosc logo (mm)</label>
-                  <input id="diceFaceLogoDepth6" type="number" min="-8" max="8" step="0.1" value="${defaultConfig.diceFaceLogoDepth6}" />
+                  <input id="diceFaceLogoDepth6" type="number" min="-8" max="20" step="0.1" value="${defaultConfig.diceFaceLogoDepth6}" />
                 </div>
                 <small id="diceFaceLogoStatus6">Logo: brak</small>
               </div>
@@ -749,6 +749,12 @@ app.innerHTML = `
           <div class="grid-2">
             <button id="savePresetBtn" type="button">Zapisz preset</button>
             <button id="deletePresetBtn" type="button">Usun preset</button>
+          </div>
+          <div class="field">
+            <button id="shareSettingsBtn" type="button">Udostepnij ustawienia przez link</button>
+            <small id="shareSettingsNote"></small>
+            <small id="shareSettingsStatus" role="status" hidden></small>
+            <input id="shareSettingsLink" type="url" readonly hidden />
           </div>
           <div class="field">
             <label for="presetSelect">Wczytaj preset</label>
@@ -933,6 +939,10 @@ const controlsMap = {
   savePresetBtn: requiredElement<HTMLButtonElement>('#savePresetBtn'),
   deletePresetBtn: requiredElement<HTMLButtonElement>('#deletePresetBtn'),
   presetSelect: requiredElement<HTMLSelectElement>('#presetSelect'),
+  shareSettingsBtn: requiredElement<HTMLButtonElement>('#shareSettingsBtn'),
+  shareSettingsNote: requiredElement<HTMLElement>('#shareSettingsNote'),
+  shareSettingsStatus: requiredElement<HTMLElement>('#shareSettingsStatus'),
+  shareSettingsLink: requiredElement<HTMLInputElement>('#shareSettingsLink'),
 }
 
 controlsMap.modelType.value = defaultConfig.modelType
@@ -1193,6 +1203,9 @@ function applyStaticTranslations(): void {
   setText('#savePresetBtn', 'presets.save', 'Zapisz preset')
   setText('#deletePresetBtn', 'presets.delete', 'Usun preset')
   setText('label[for="presetSelect"]', 'presets.load', 'Wczytaj preset')
+  setText('#shareSettingsBtn', 'share.button', 'Udostepnij ustawienia przez link')
+  setText('#shareSettingsNote', 'share.note', 'Pliki SVG/PNG i wlasne fonty nie sa dolaczane do linku.')
+  setAttr('#shareSettingsLink', 'aria-label', 'share.link.label', 'Link do udostepnienia ustawien')
 
   setAttr('#panelResizeHandle', 'aria-label', 'accessibility.panelResize', 'Zmien szerokosc panelu')
   setAttr('#viewer', 'aria-label', 'accessibility.viewer', 'Podglad 3D')
@@ -2736,7 +2749,7 @@ function createLogoGeometries(
   depth: number,
   curveSegments = 28,
   transform: LogoTransformOptions = {},
-  maxDepth = 8,
+  maxDepth = 20.2,
 ): THREE.ExtrudeGeometry[] {
   if (shapes.length === 0) {
     return []
@@ -2986,7 +2999,11 @@ function createBackLogoCutters(config: TagConfig): THREE.Mesh[] {
 }
 
 function applyDebossBackLogoToTagMeshes(meshes: THREE.Mesh[], config: TagConfig): THREE.Mesh[] {
-  return applyCuttersToTagMeshes(meshes, () => createBackLogoCutters(config))
+  return applyCuttersToTagMeshes(
+    meshes,
+    () => createBackLogoCutters(config),
+    config.modelType === 'tag' || config.modelType === 'tag3d',
+  )
 }
 
 function createLaidOutTextShapes(config: TagConfig, font: unknown | null): THREE.Shape[] {
@@ -3130,9 +3147,9 @@ function getConfigFromForm(): TagConfig {
       ? rawShape
       : 'rounded'
 
-  const puzzleSize = clamp(Number(controlsMap.width.value), 20, 120)
-  const width = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.width.value), 20, 120)
-  const height = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.height.value), 15, 60)
+  const puzzleSize = clamp(Number(controlsMap.width.value), 1, 300)
+  const width = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.width.value), 1, 300)
+  const height = modelType === 'puzzle' ? puzzleSize : clamp(Number(controlsMap.height.value), 1, 300)
   const thickness = clamp(Number(controlsMap.thickness.value), 1.5, modelType === 'tag3d' ? 100 : 8)
   const textDepth = clamp(Number(controlsMap.textDepth.value), -20, 20)
   const backTextDepth = clamp(Number(controlsMap.backTextDepth.value), -20, 20)
@@ -3189,21 +3206,21 @@ function getConfigFromForm(): TagConfig {
   const diceFaceLogoSize4 = clamp(Number(controlsMap.diceFaceLogoSize4.value), 2, 20)
   const diceFaceLogoSize5 = clamp(Number(controlsMap.diceFaceLogoSize5.value), 2, 20)
   const diceFaceLogoSize6 = clamp(Number(controlsMap.diceFaceLogoSize6.value), 2, 20)
-  const diceFaceLogoDepth1 = clamp(Number(controlsMap.diceFaceLogoDepth1.value), -8, 8)
-  const diceFaceLogoDepth2 = clamp(Number(controlsMap.diceFaceLogoDepth2.value), -8, 8)
-  const diceFaceLogoDepth3 = clamp(Number(controlsMap.diceFaceLogoDepth3.value), -8, 8)
-  const diceFaceLogoDepth4 = clamp(Number(controlsMap.diceFaceLogoDepth4.value), -8, 8)
-  const diceFaceLogoDepth5 = clamp(Number(controlsMap.diceFaceLogoDepth5.value), -8, 8)
-  const diceFaceLogoDepth6 = clamp(Number(controlsMap.diceFaceLogoDepth6.value), -8, 8)
+  const diceFaceLogoDepth1 = clamp(Number(controlsMap.diceFaceLogoDepth1.value), -8, 20)
+  const diceFaceLogoDepth2 = clamp(Number(controlsMap.diceFaceLogoDepth2.value), -8, 20)
+  const diceFaceLogoDepth3 = clamp(Number(controlsMap.diceFaceLogoDepth3.value), -8, 20)
+  const diceFaceLogoDepth4 = clamp(Number(controlsMap.diceFaceLogoDepth4.value), -8, 20)
+  const diceFaceLogoDepth5 = clamp(Number(controlsMap.diceFaceLogoDepth5.value), -8, 20)
+  const diceFaceLogoDepth6 = clamp(Number(controlsMap.diceFaceLogoDepth6.value), -8, 20)
   const logoEnabled = controlsMap.logoEnabled.checked
   const logoSize = clamp(Number(controlsMap.logoSize.value), 2, 40)
-  const logoDepth = clamp(Number(controlsMap.logoDepth.value), -8, 8)
+  const logoDepth = clamp(Number(controlsMap.logoDepth.value), -8, 20)
   const logoOffsetX = clamp(Number(controlsMap.logoOffsetX.value), -60, 60)
   const logoOffsetY = clamp(Number(controlsMap.logoOffsetY.value), -60, 60)
   const logoRotation = clamp(Number(controlsMap.logoRotation.value), -180, 180)
   const backLogoEnabled = controlsMap.backLogoEnabled.checked
   const backLogoSize = clamp(Number(controlsMap.backLogoSize.value), 2, 40)
-  const backLogoDepth = clamp(Number(controlsMap.backLogoDepth.value), -8, 8)
+  const backLogoDepth = clamp(Number(controlsMap.backLogoDepth.value), -8, 20)
   const backLogoOffsetX = clamp(Number(controlsMap.backLogoOffsetX.value), -60, 60)
   const backLogoOffsetY = clamp(Number(controlsMap.backLogoOffsetY.value), -60, 60)
   const backLogoRotation = clamp(Number(controlsMap.backLogoRotation.value), -180, 180)
@@ -3628,7 +3645,7 @@ function createDiceObject(config: TagConfig): THREE.Object3D {
       return
     }
 
-    const faceLogoDepth = clamp(face.logoDepth, -8, 8)
+    const faceLogoDepth = clamp(face.logoDepth, -8, 20)
     if (Math.abs(faceLogoDepth) < 0.001) {
       return
     }
@@ -3822,13 +3839,13 @@ function createExportDiceObject(config: TagConfig): THREE.Group {
         addGeometries(createCenteredTextGeometries(face.text, fontSize, depth, config.textBold), textDepth, config.diceShowText)
       }
 
-      const logoDepth = clamp(face.logoDepth, -8, 8)
+      const logoDepth = clamp(face.logoDepth, -8, 20)
       if (face.logoEnabled && Math.abs(logoDepth) >= 0.001) {
         const shapes = getDiceFaceLogoShapes(face.face)
         const depth = Math.abs(logoDepth) + (logoDepth < 0 ? 0.2 : 0)
         const logoSize = clamp(face.logoSize, 2, availableTextArea)
         const segments = logoDepth < 0 ? 28 : 18
-        addGeometries(createLogoGeometries(shapes, logoSize, depth, segments, {}, 8.2), logoDepth, true)
+        addGeometries(createLogoGeometries(shapes, logoSize, depth, segments, {}, 20.2), logoDepth, true)
       }
     }
 
@@ -4343,7 +4360,11 @@ function downloadStl(): void {
     const min = String(now.getMinutes()).padStart(2, '0')
     link.download = `DICE_D6_${dd}-${mm}-${yyyy}_${hh}:${min}.stl`
   } else {
-    const fileText = config.modelType === 'tag3d' ? config.backText : config.text
+    const fileText = config.modelType === 'tag'
+      ? `${config.backText}-${config.text}`
+      : config.modelType === 'tag3d'
+        ? config.backText
+        : config.text
     link.download = `${fileText.toLowerCase().replace(/\s+/g, '-') || 'tag'}.stl`
   }
 
@@ -4366,12 +4387,7 @@ function migrateOneSidedDefault(config: TagConfig): TagConfig {
   return config
 }
 
-function readLastState(): PersistedAppState | null {
-  const parsed = readLastStateFromStorage(lastStateStorageKey)
-  if (!parsed) {
-    return null
-  }
-
+function normalizePersistedState(parsed: PersistedAppState): PersistedAppState {
   const parsedFontChoice = parsed.fontChoice as FontChoice | undefined
   const fontChoice =
     parsedFontChoice && isBuiltinFontChoice(parsedFontChoice)
@@ -4379,7 +4395,7 @@ function readLastState(): PersistedAppState | null {
       : defaultFontChoice
   const mergedConfig = {
     ...defaultConfig,
-    ...migrateOneSidedDefault(parsed.config),
+    ...migrateOneSidedDefault({ ...defaultConfig, ...parsed.config }),
     frontFontChoice: normalizeFontChoice(parsed.config.frontFontChoice, fontChoice),
     backFontChoice: normalizeFontChoice(parsed.config.backFontChoice, fontChoice),
     frontTextBold: parsed.config.frontTextBold ?? false,
@@ -4393,7 +4409,43 @@ function readLastState(): PersistedAppState | null {
   }
 }
 
-function saveLastState(): void {
+function readSharedStateFromUrl(): PersistedAppState | null {
+  const encoded = new URLSearchParams(window.location.hash.slice(1)).get('settings')
+  if (!encoded) {
+    return null
+  }
+
+  try {
+    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
+    const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
+    const binary = atob(paddedBase64)
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0))
+    const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes))
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('config' in parsed) ||
+      typeof parsed.config !== 'object' ||
+      parsed.config === null ||
+      !('modelType' in parsed.config) ||
+      !['tag', 'tag3d', 'dice', 'puzzle'].includes(String(parsed.config.modelType))
+    ) {
+      throw new Error('Shared link does not contain valid settings')
+    }
+
+    return normalizePersistedState(parsed as PersistedAppState)
+  } catch (error) {
+    console.error('Failed to read shared settings from URL:', error)
+    return null
+  }
+}
+
+function readLastState(): PersistedAppState | null {
+  const parsed = readLastStateFromStorage(lastStateStorageKey)
+  return parsed ? normalizePersistedState(parsed) : null
+}
+
+function getPersistedAppStateFromForm(): PersistedAppState {
   const selectedChoice = controlsMap.fontChoiceDice.value as FontChoice
   const fontChoice = isBuiltinFontChoice(selectedChoice) ? selectedChoice : defaultFontChoice
   const config = getConfigFromForm()
@@ -4401,7 +4453,7 @@ function saveLastState(): void {
     modelDraftByType[config.modelType] = normalizeConfigForModel(config, config.modelType)
   }
 
-  const payload: PersistedAppState = {
+  return {
     config,
     fontChoice,
     modelDrafts: {
@@ -4410,7 +4462,39 @@ function saveLastState(): void {
       puzzle: modelDraftByType.puzzle,
     },
   }
-  saveLastStateToStorage(lastStateStorageKey, payload)
+}
+
+function saveLastState(): void {
+  saveLastStateToStorage(lastStateStorageKey, getPersistedAppStateFromForm())
+}
+
+function encodeSharedState(state: PersistedAppState): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(state))
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('')
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+async function shareSettings(): Promise<void> {
+  const url = new URL(window.location.href)
+  url.hash = `settings=${encodeSharedState(getPersistedAppStateFromForm())}`
+  controlsMap.shareSettingsStatus.hidden = false
+  controlsMap.shareSettingsLink.hidden = true
+
+  try {
+    await navigator.clipboard.writeText(url.toString())
+    controlsMap.shareSettingsStatus.textContent = t('share.copied', {}, 'Link skopiowany do schowka.')
+  } catch (error) {
+    console.error('Failed to copy shared settings link:', error)
+    controlsMap.shareSettingsStatus.textContent = t(
+      'share.copyFallback',
+      {},
+      'Nie mozna skopiowac linku automatycznie. Skopiuj go z pola ponizej.',
+    )
+    controlsMap.shareSettingsLink.value = url.toString()
+    controlsMap.shareSettingsLink.hidden = false
+    controlsMap.shareSettingsLink.focus()
+    controlsMap.shareSettingsLink.select()
+  }
 }
 
 type TagDraftModelType = 'tag' | 'tag3d' | 'puzzle'
@@ -4425,7 +4509,7 @@ function getDefaultConfigForModel(modelType: TagDraftModelType): TagConfig {
 
 function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType): TagConfig {
   if (modelType === 'puzzle') {
-    const puzzleSize = clamp(config.width, 20, 120)
+    const puzzleSize = clamp(config.width, 1, 300)
     return {
       ...config,
       modelType: 'puzzle',
@@ -4450,8 +4534,8 @@ function normalizeConfigForModel(config: TagConfig, modelType: TagDraftModelType
     ...config,
     modelType,
     shape: normalizedShape,
-    width: clamp(config.width, 20, 120),
-    height: clamp(config.height, 15, 60),
+    width: clamp(config.width, 1, 300),
+    height: clamp(config.height, 1, 300),
     thickness: clamp(config.thickness, 1.5, modelType === 'tag3d' ? 100 : 8),
     holeDiameter: clamp(config.holeDiameter, 0, 12),
     textOffsetX: config.textOffsetX ?? 0,
@@ -4843,6 +4927,10 @@ function wireEvents(): void {
     controlsMap.presetSelect.value = presetName
   })
 
+  controlsMap.shareSettingsBtn.addEventListener('click', () => {
+    void shareSettings()
+  })
+
   controlsMap.presetSelect.addEventListener('change', () => {
     const presetName = controlsMap.presetSelect.value
     if (!presetName) {
@@ -4883,7 +4971,7 @@ async function start(): Promise<void> {
     applyPanelWidth(savedPanelWidth)
   }
 
-  const persistedState = readLastState()
+  const persistedState = readSharedStateFromUrl() ?? readLastState()
   const initialConfig = persistedState ? persistedState.config : defaultConfig
   const savedDrafts = persistedState?.modelDrafts
   modelDraftByType = {

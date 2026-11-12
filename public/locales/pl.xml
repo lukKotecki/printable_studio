@@ -105,6 +105,11 @@
   <entry key="presets.delete">Usun preset</entry>
   <entry key="presets.load">Wczytaj preset</entry>
   <entry key="presets.selectPlaceholder">-- wybierz --</entry>
+  <entry key="share.button">Udostepnij ustawienia przez link</entry>
+  <entry key="share.note">Pliki SVG/PNG i wlasne fonty nie sa dolaczane do linku.</entry>
+  <entry key="share.link.label">Link do udostepnienia ustawien</entry>
+  <entry key="share.copied">Link skopiowany do schowka.</entry>
+  <entry key="share.copyFallback">Nie mozna skopiowac linku automatycznie. Skopiuj go z pola ponizej.</entry>
   <entry key="accessibility.panelResize">Zmien szerokosc panelu</entry>
   <entry key="accessibility.viewer">Podglad 3D</entry>
   <entry key="viewer.legend.rotate">Lewy przycisk: obrot</entry>
